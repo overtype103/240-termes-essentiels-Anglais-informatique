@@ -1,0 +1,1334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>{{TITLE}}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+    body{min-height:100vh;color:#f5f5f5;background:#050816;overflow-y:auto;overflow-x:hidden;position:relative}
+    body::before{content:"";position:fixed;inset:0;background-image:url("background.png");background-size:cover;background-position:center;opacity:1;z-index:-2;animation:bgMove 40s ease-in-out infinite alternate;transform-origin:center}
+    @keyframes bgMove{0%{transform:scale(1) translate3d(0,0,0)}50%{transform:scale(1.1) translate3d(-10px,-10px,0)}100%{transform:scale(1.2) translate3d(10px,10px,0)}}
+    body::after{content:"";position:fixed;inset:0;background:radial-gradient(circle at top,rgba(255,255,255,0.08),transparent 55%),linear-gradient(to bottom,rgba(0,0,0,0.8),rgba(0,0,0,0.95));z-index:-1}
+
+    .app-container{max-width:900px;margin:40px auto;padding:24px;border-radius:18px;background:rgba(10,10,25,0.9);box-shadow:0 24px 60px rgba(0,0,0,0.7),0 0 0 1px rgba(255,255,255,0.04);backdrop-filter:blur(18px)}
+    header{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;gap:12px;flex-wrap:wrap}
+    .title{font-size:1.4rem;font-weight:600;letter-spacing:.04em}
+    .subtitle{font-size:.9rem;color:#b0b6ff;opacity:.9}
+    .pill{padding:6px 12px;border-radius:999px;font-size:.8rem;background:linear-gradient(135deg,#6366f1,#22c55e);color:#0b1020;font-weight:600;box-shadow:0 0 0 1px rgba(255,255,255,0.2)}
+    .progress-bar{width:100%;height:8px;border-radius:999px;background:rgba(255,255,255,0.06);overflow:hidden;margin-bottom:18px}
+    .progress-fill{height:100%;width:0;border-radius:inherit;background:linear-gradient(90deg,#22c55e,#a3e635);transition:width .25s ease-out}
+
+    .quiz-card{border-radius:16px;padding:20px 18px;background:radial-gradient(circle at top left,rgba(99,102,241,0.18),transparent 55%),radial-gradient(circle at bottom right,rgba(34,197,94,0.18),transparent 55%),rgba(15,23,42,0.95);border:1px solid rgba(148,163,184,0.35)position:relative;overflow:hidden;}
+    .question-meta{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-size:.85rem;color:#cbd5f5;opacity:.9}
+    .question-index{font-weight:600;letter-spacing:.08em;text-transform:uppercase;font-size:.75rem;color:#a5b4fc}
+    .question-type{font-size:1.8rem;padding:4px 10px;border-radius:999px;background:rgba(15,118,110,0.2);color:#5eead4;border:1px solid rgba(45,212,191,0.4)}
+
+    .prompt-label{font-size:.8rem;text-transform:uppercase;letter-spacing:.12em;color:#9ca3af;margin-bottom:4px}
+    .prompt-text{font-size:2.4rem;font-weight:500;color:#e5e7eb;margin-bottom:16px}
+    .prompt-helper{
+  font-size:1.15rem;
+  font-weight:500;
+  color:#dbe0ff;
+  margin-bottom:18px;
+  padding-left:12px;
+  border-left:3px solid rgba(99,102,241,0.6)
+}
+
+    .options{display:grid;grid-template-columns:1fr;gap:10px;margin-bottom:18px}
+    .option-btn{width:100%;text-align:left;padding:10px 12px;border-radius:12px;border:1px solid rgba(148,163,184,0.5);background:rgba(15,23,42,0.9);color:#e5e7eb;font-size:.95rem;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:8px;transition:all .18s ease-out}
+    .option-btn span.label{font-weight:500}
+    .option-btn:hover{border-color:#6366f1;background:radial-gradient(circle at top left,rgba(99,102,241,0.25),transparent 60%),rgba(15,23,42,0.95);transform:translateY(-1px);box-shadow:0 10px 25px rgba(15,23,42,0.7)}
+    .option-btn.selected{border-color:#6366f1;background:linear-gradient(135deg,rgba(79,70,229,0.9),rgba(37,99,235,0.9));box-shadow:0 12px 30px rgba(79,70,229,0.7)}
+    .option-btn.correct{border-color:#22c55e;background:linear-gradient(135deg,rgba(22,163,74,0.9),rgba(34,197,94,0.9));box-shadow:0 12px 30px rgba(22,163,74,0.7)}
+    .option-btn.incorrect{border-color:#ef4444;background:linear-gradient(135deg,rgba(185,28,28,0.9),rgba(239,68,68,0.9));box-shadow:0 12px 30px rgba(185,28,28,0.7)}
+
+    .feedback{min-height:20px;font-size:.9rem;margin-bottom:10px}
+    .feedback.correct{color:#4ade80}
+    .feedback.incorrect{color:#f97373}
+
+    .nav-row{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:6px}
+    .nav-buttons{display:flex;gap:8px}
+    button.nav-btn,button.secondary-btn{border-radius:999px;border:none;padding:8px 14px;font-size:.9rem;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:all .18s ease-out;white-space:nowrap}
+    button.nav-btn{background:rgba(15,23,42,0.9);color:#e5e7eb;border:1px solid rgba(148,163,184,0.6)}
+    button.nav-btn:disabled{opacity:.4;cursor:default;transform:none;box-shadow:none}
+    button.nav-btn:not(:disabled):hover{border-color:#6366f1;background:rgba(30,64,175,0.9);box-shadow:0 8px 20px rgba(30,64,175,0.7);transform:translateY(-1px)}
+    button.secondary-btn{background:rgba(15,23,42,0.9);color:#e5e7eb;border:1px solid rgba(148,163,184,0.6)}
+    button.secondary-btn:hover{border-color:#f97316;background:rgba(30,64,175,0.9);box-shadow:0 8px 20px rgba(30,64,175,0.7);transform:translateY(-1px)}
+
+    .progress-text{font-size:.85rem;color:#9ca3af}
+    .score-pill{font-size:.85rem;padding:4px 10px;border-radius:999px;background:rgba(22,163,74,0.15);color:#4ade80;border:1px solid rgba(34,197,94,0.5)}
+
+    .recap{margin-top:18px;padding-top:14px;border-top:1px solid rgba(148,163,184,0.4);max-height:260px;overflow-y:auto;scrollbar-width:thin}
+    .recap h3{font-size:.95rem;margin-bottom:8px;color:#e5e7eb}
+    .recap-item{padding:8px 0;border-bottom:1px dashed rgba(148,163,184,0.4);font-size:.85rem}
+    .recap-item:last-child{border-bottom:none}
+    .recap-item .q-label{font-weight:600;color:#c4b5fd;margin-bottom:2px}
+    .recap-item .prompt{color:#9ca3af;margin-bottom:2px}
+    .recap-item .answer-line{display:flex;flex-wrap:wrap;gap:6px}
+    .tag-correct{color:#4ade80}
+    .tag-incorrect{color:#f97373}
+    .tag-neutral{color:#e5e7eb}
+
+    @media(min-width:640px){.options{grid-template-columns:1fr 1fr 1fr}}
+  
+/* ===== Adaptive option layouts (v03) ===== */
+.layout-1{grid-template-columns:1fr}
+.layout-2{grid-template-columns:1fr 1fr}
+.layout-3{grid-template-columns:repeat(3,1fr)}
+.layout-4{grid-template-columns:repeat(2,1fr)}
+
+.layout-5{grid-template-columns:repeat(6,1fr)}
+.layout-5 .option-btn:nth-child(-n+3){grid-column:span 2}
+.layout-5 .option-btn:nth-child(n+4){grid-column:span 3}
+
+.layout-6{grid-template-columns:repeat(3,1fr)}
+
+.layout-7{grid-template-columns:repeat(6,1fr)}
+.layout-7 .option-btn:nth-child(-n+3){grid-column:span 2}
+.layout-7 .option-btn:nth-child(n+4){grid-column:span 3}
+
+.layout-8{grid-template-columns:repeat(6,1fr)}
+.layout-8 .option-btn:nth-child(-n+6){grid-column:span 2}
+.layout-8 .option-btn:nth-child(n+7){grid-column:span 3}
+
+@media(max-width:640px){
+  .options{grid-template-columns:1fr}
+}
+
+
+/* ===== Header clamp (prevent long title overlapping the pill) ===== */
+header > div:first-child{max-width:calc(100% - 220px);}
+header .title{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+header .subtitle{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:1;overflow:hidden;}
+
+
+/* ===== Menu overlay ===== */
+.quiz-card.menu-open{height:240px;max-height:240px;}
+@media(max-width:640px){.quiz-card.menu-open{height:280px;max-height:280px;}}
+.menu-overlay{position:absolute;inset:0;border-radius:16px;z-index:50;overflow:hidden;background-image:url("Box Background.png");background-size:cover;background-position:center;background-repeat:no-repeat;background-color:rgba(15,23,42,0.55);background-blend-mode:overlay;border:1px solid rgba(148,163,184,0.35);box-shadow:inset 0 0 0 1px rgba(255,255,255,0.06);padding:18px 18px;display:flex;flex-direction:column;justify-content:space-between;}
+.menu-actions{display:flex;justify-content:flex-start;}
+#menuInfo,#menuSubtitle,#menuTitle{white-space:pre-line;}
+/* ===== Menu text styles ===== */
+.menu-head{display:flex;flex-direction:column;gap:10px;}
+#menuWelcome{font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:rgba(176,182,255,0.75);}
+#menuTitle{font-size:clamp(1.35rem, 2.8vw, 2.15rem);line-height:1.12;padding-bottom:4px;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;}
+#menuSubtitle{font-size:1.12rem;line-height:1.28;color:#b0b6ff;opacity:.97;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;}
+#menuInfo{font-size:1.02rem;line-height:1.3;color:#e5e7eb;opacity:.97;max-height:100px;overflow:auto;padding:10px 12px;border-radius:12px;background:rgba(0,0,0,0.16);border:1px solid rgba(148,163,184,0.12);}
+#menuInfo.is-empty{display:none;}
+#feedback,#promptHelper,.subtitle{white-space:pre-line;}
+
+</style>
+</head>
+<body>
+  <div class="app-container">
+    <header>
+      <div>
+        <div class="title">{{TITLE}}</div>
+        <div class="subtitle">{{SUBTITLE}}</div>
+      </div>
+      <div class="pill" id="pillText">Multiple Choice</div>
+    </header>
+
+    <div class="progress-bar">
+      <div class="progress-fill" id="progressFill"></div>
+    </div>
+
+    <div class="quiz-card">
+  <div class="menu-overlay" id="menuOverlay">
+    <div class="menu-head">
+      <div id="menuWelcome">WELCOME</div>
+      <div id="menuTitle">{{TITLE}}</div>
+      <div id="menuSubtitle">{{SUBTITLE}}</div>
+      <div id="menuInfo" class="is-empty" style="display:none"></div>
+    </div>
+    <div class="menu-actions">
+      <button class="nav-btn" id="startQuizBtn" type="button">Start quiz</button>
+    </div>
+  </div>
+  <div id="quizUI">
+
+      <div class="question-meta">
+        <div class="question-index" id="questionIndex">Question 1 / 10</div>
+        <div class="question-type" id="questionType"></div>
+      </div>
+
+      <div class="prompt-label" id="promptLabel" style="display:none">Prompt</div>
+      <div class="prompt-helper" id="promptHelper">{{PROMPT_HELPER}}</div>
+ <div class="prompt-text" id="promptText">...</div>
+
+      <div class="options" id="optionsContainer"></div>
+      <div class="feedback" id="feedback"></div>
+
+      <div class="nav-row">
+        <div class="nav-buttons">
+          <button class="nav-btn" id="prevBtn" disabled>← Previous</button>
+          <button class="nav-btn" id="nextBtn">Next →</button>
+        </div>
+        <div class="nav-buttons">
+          <button class="secondary-btn" id="menuBtn" type="button">Back to menu</button>
+          <button class="secondary-btn" id="restartBtn">Restart</button>
+        </div>
+      </div>
+
+      <div class="nav-row" style="margin-top:10px;">
+        <div class="progress-text" id="progressText">Answered 0 / 10</div>
+        <div class="score-pill" id="scorePill">Score: 0 / 10</div>
+      </div>
+
+      <div class="recap" id="recap" style="display:block;">
+        <h3>Recap</h3>
+        <div id="recapList"></div>
+      </div>
+    </div>
+  </div>
+
+    </div>
+
+<!-- The generator will upsert these constants: QUIZ_CONFIG, LABEL_CONFIG, DATA -->
+  <script>
+    const QUIZ_CONFIG = {
+  "fields": {
+    "term": {
+      "roles": [
+        "answer"
+      ],
+      "label": ""
+    },
+    "french": {
+      "roles": [
+        "prompt"
+      ],
+      "label": "FRENCH"
+    },
+    "category": {
+      "roles": [],
+      "label": ""
+    },
+    "syn1": {
+      "roles": [
+        "prompt"
+      ],
+      "label": "SYNONYM"
+    },
+    "syn2": {
+      "roles": [
+        "prompt"
+      ],
+      "label": "SYNONYM"
+    },
+    "def1": {
+      "roles": [
+        "prompt"
+      ],
+      "label": "DEFINITION"
+    },
+    "def2": {
+      "roles": [
+        "prompt"
+      ],
+      "label": "DEFINITION"
+    },
+    "expliquer": {
+      "roles": [],
+      "label": ""
+    }
+  },
+  "text": {
+    "title": "240 Essential IT terms",
+    "subtitle": "Lisez la question à voix haute et sélectionnez la bonne réponse (3 options)",
+    "prompt_helper": "Répondez à la question",
+    "correct": "Correct! (en français : \"{{french}} \": \"{{expliquer}}\") (terme utilisé en {{category}})",
+    "incorrect": "Incorrect. La bonne réponse était \"{{answer}}\". (en français : \"{{french}}\")",
+    "score": "Score: {{score}} / {{total}}",
+    "end_message": "Fin du quiz!",
+    "menu_info": "Ce quiz est conçu pour vous permettre d'apprendre les 240 termes informatiques anglais les plus importants. Vous devez répondre à 10 questions aléatoires. Peu à peu, vous apprendrez tous ces  termes",
+    "start_button": "Appuyez ici pour commencer",
+    "menu_button": "Main menu"
+  },
+  "settings": {
+    "num_options": 3,
+    "num_questions": 10
+  }
+};
+    const LABEL_CONFIG = {
+  "DEFINITION": {
+    "uiLabel": "Definition",
+    "uiQuestion": "Quel mot anglais signifie:",
+    "maskAnswer": false
+  },
+  "FRENCH": {
+    "uiLabel": "FRENCH",
+    "uiQuestion": "Comment dit-on en en anglais?",
+    "maskAnswer": false
+  },
+  "SYNONYM": {
+    "uiLabel": "SYNONYM",
+    "uiQuestion": "Quel est le terme informatique qui a le même sens?",
+    "maskAnswer": false
+  }
+};
+    const DATA = [
+ { term: "Account", french: "compte", category: "General I.T.", syn1: "user profile", syn2: "login identity", def1: "A personal login identity.", def2: "A registered profile used to access services.", expliquer: "Une identité personnelle de connexion." },
+ { term: "Adapter", french: "adaptateur", category: "Hardware", syn1: "converter", syn2: "connector adapter", def1: "Converts one connector to another.", def2: "A device that allows compatibility between different ports.", expliquer: "Convertit un connecteur en un autre." },
+ { term: "Airplane mode", french: "mode avion", category: "Mobile", syn1: "flight mode", syn2: "wireless‑off mode", def1: "Turns off wireless signals.", def2: "A setting that disables all radio communications.", expliquer: "Désactive les signaux sans fil." },
+ { term: "Algorithm", french: "algorithme", category: "Data & AI", syn1: "procedure", syn2: "computational method", def1: "Set of steps to solve a problem.", def2: "A sequence of instructions used to perform a task.", expliquer: "Ensemble d’étapes pour résoudre un problème." },
+ { term: "Analytics", french: "analytique", category: "Data & AI", syn1: "data analysis", syn2: "analytical processing", def1: "Studying data for insights.", def2: "The examination of data to discover patterns and trends.", expliquer: "Étude des données pour en tirer des informations." },
+ { term: "Antivirus", french: "antivirus", category: "Cybersecurity", syn1: "security software", syn2: "malware protection tool", def1: "Software that protects a device.", def2: "A program that detects and removes malicious software.", expliquer: "Logiciel qui protège un appareil." },
+ { term: "API", french: "API", category: "Software Development", syn1: "interface", syn2: "endpoint system", def1: "A set of rules that allows software components to communicate.", def2: "An interface enabling applications to interact with each other.", expliquer: "Ensemble de règles permettant aux composants logiciels de communiquer." },
+ { term: "API", french: "API", category: "Software Development", syn1: "interface", syn2: "application programming interface", def1: "Tool for connecting software.", def2: "A set of rules that allows programs to communicate.", expliquer: "Outil pour connecter des logiciels." },
+ { term: "App store", french: "boutique d’applications", category: "General I.T.", syn1: "app marketplace", syn2: "software distribution platform", def1: "Place to download apps.", def2: "An online store where users install applications.", expliquer: "Endroit où télécharger des applications." },
+ { term: "Application", french: "application", category: "General I.T.", syn1: "app", syn2: "software tool", def1: "A program for a specific task.", def2: "Software designed to perform a particular function.", expliquer: "Un programme destiné à une tâche précise." },
+ { term: "Archive", french: "archive", category: "General I.T.", syn1: "compressed file", syn2: "file package", def1: "A compressed file.", def2: "A file that stores multiple items in a reduced size.", expliquer: "Un fichier compressé." },
+ { term: "Artificial intelligence", french: "intelligence artificielle", category: "Data & AI", syn1: "AI", syn2: "machine intelligence", def1: "Machines that learn and decide.", def2: "Technology that enables computers to mimic human thinking.", expliquer: "Des machines qui apprennent et prennent des décisions." },
+ { term: "Attachment", french: "pièce jointe", category: "General I.T.", syn1: "file add‑on", syn2: "email attachment", def1: "File sent with an email.", def2: "A document or item included with a message.", expliquer: "Fichier envoyé avec un e-mail." },
+ { term: "Authentication", french: "authentification", category: "Cybersecurity", syn1: "identity check", syn2: "verification process", def1: "Verifying identity.", def2: "The act of confirming a user’s credentials.", expliquer: "Vérification de l’identité." },
+ { term: "Automation", french: "automatisation", category: "General I.T.", syn1: "auto‑process", syn2: "automated workflow", def1: "Machines doing tasks automatically.", def2: "The use of technology to perform tasks without human input.", expliquer: "Des machines qui effectuent des tâches automatiquement." },
+ { term: "Backup", french: "sauvegarde", category: "General I.T.", syn1: "copy", syn2: "data preservation file", def1: "Copy of data for safety.", def2: "A duplicate of important files stored for protection.", expliquer: "Copie des données pour les protéger." },
+ { term: "bandwidth", french: "bande passante", category: "Networking", syn1: "data capacity", syn2: "transfer rate", def1: "The maximum amount of data that can be transmitted per second.", def2: "A measure of network capacity.", expliquer: "Quantité maximale de données pouvant être transmise par seconde." },
+ { term: "Battery", french: "batterie", category: "Hardware", syn1: "power cell", syn2: "energy storage unit", def1: "Stores electrical power.", def2: "A component that supplies portable energy to a device.", expliquer: "Stocke l’énergie électrique." },
+ { term: "Battery life", french: "autonomie", category: "Hardware", syn1: "power duration", syn2: "energy endurance", def1: "How long the battery lasts.", def2: "The length of time a device can run before recharging.", expliquer: "Durée pendant laquelle la batterie tient." },
+ { term: "Big data", french: "big data", category: "Data & AI", syn1: "large datasets", syn2: "massive data collections", def1: "Very large data sets.", def2: "Extremely large volumes of data analyzed for insights.", expliquer: "Ensembles de données très volumineux." },
+ { term: "Bluetooth", french: "Bluetooth", category: "Networking", syn1: "wireless link", syn2: "short‑range communication protocol", def1: "Wireless short‑range connection.", def2: "A technology for connecting devices over short distances.", expliquer: "Connexion sans fil à courte portée." },
+ { term: "Browser", french: "navigateur", category: "Networking", syn1: "web app", syn2: "internet navigation tool", def1: "Software used to access websites.", def2: "A program that retrieves and displays web content.", expliquer: "Logiciel utilisé pour accéder aux sites web." },
+ { term: "Bug", french: "bug", category: "General I.T.", syn1: "error", syn2: "software defect", def1: "An error in software.", def2: "A flaw that causes a program to behave unexpectedly.", expliquer: "Une erreur dans un logiciel." },
+ { term: "Cable", french: "câble", category: "Hardware", syn1: "wire", syn2: "connection cable", def1: "A wire that connects devices.", def2: "A physical connector used to transmit power or data.", expliquer: "Un câble qui relie des appareils." },
+ { term: "cache", french: "cache", category: "General I.T.", syn1: "temporary storage", syn2: "fast memory", def1: "A storage layer that speeds up data access.", def2: "Memory used to store frequently accessed information.", expliquer: "Une couche de stockage qui accélère l’accès aux données." },
+ { term: "Calendar", french: "calendrier", category: "General I.T.", syn1: "schedule", syn2: "event planner", def1: "Tool for dates and events.", def2: "A system used to organize appointments and deadlines.", expliquer: "Outil pour les dates et les événements." },
+ { term: "Call", french: "appel", category: "General I.T.", syn1: "phone call", syn2: "voice communication", def1: "Voice communication.", def2: "A real‑time audio conversation between two people.", expliquer: "Communication vocale." },
+ { term: "Camera", french: "appareil photo", category: "Hardware", syn1: "photo device", syn2: "digital imaging sensor", def1: "Device for taking pictures.", def2: "A tool that captures photos and videos.", expliquer: "Appareil pour prendre des photos." },
+ { term: "Case", french: "boîtier", category: "Hardware", syn1: "tower", syn2: "computer chassis", def1: "The outer shell of a PC.", def2: "The enclosure that houses computer components.", expliquer: "Le boîtier externe d’un PC." },
+ { term: "Charger", french: "chargeur", category: "Hardware", syn1: "power adapter", syn2: "power supply unit", def1: "Device that powers electronics.", def2: "A device that provides electrical energy to recharge batteries.", expliquer: "Appareil qui alimente des équipements électroniques." },
+ { term: "Chart", french: "graphique", category: "General I.T.", syn1: "graph", syn2: "data visualization", def1: "Visual representation of data.", def2: "A graphic used to display trends or comparisons.", expliquer: "Représentation visuelle des données." },
+ { term: "Chat", french: "discussion", category: "General I.T.", syn1: "conversation", syn2: "text exchange", def1: "Text conversation.", def2: "A written communication between two or more people.", expliquer: "Conversation par texte." },
+ { term: "Cloud", french: "cloud", category: "Cloud & Virtualization", syn1: "online storage", syn2: "cloud computing system", def1: "Online storage and services.", def2: "Remote servers used to store and process data.", expliquer: "Stockage et services en ligne." },
+ { term: "Cloud storage", french: "stockage en ligne", category: "Cloud & Virtualization", syn1: "online backup", syn2: "remote storage service", def1: "Saving files online.", def2: "A service that stores data on remote servers.", expliquer: "Enregistrement de fichiers en ligne." },
+ { term: "Code", french: "code", category: "Software Development", syn1: "programming text", syn2: "software instructions", def1: "Instructions written for computers.", def2: "A set of commands that tells a computer what to do.", expliquer: "Instructions écrites pour les ordinateurs." },
+ { term: "Collaboration", french: "collaboration", category: "General I.T.", syn1: "teamwork", syn2: "co‑working process", def1: "Working together online.", def2: "The act of multiple people contributing to a shared task.", expliquer: "Travail collaboratif en ligne." },
+ { term: "Comment", french: "commentaire", category: "General I.T.", syn1: "note", syn2: "annotation", def1: "Note added to a document.", def2: "A remark or suggestion written inside a file.", expliquer: "Note ajoutée à un document." },
+ { term: "compiler", french: "compilateur", category: "Software Development", syn1: "translator", syn2: "code processor", def1: "A program that converts source code into machine code.", def2: "Software that transforms high-level instructions into executables.", expliquer: "Programme qui convertit le code source en code machine." },
+ { term: "Computer", french: "ordinateur", category: "General I.T.", syn1: "PC", syn2: "computing device", def1: "A machine used for work, browsing, or play.", def2: "An electronic device that processes information and runs programs.", expliquer: "Machine utilisée pour travailler, naviguer ou jouer." },
+ { term: "concurrency", french: "concurrence", category: "Software Development", syn1: "parallel execution", syn2: "simultaneous processing", def1: "The ability to run multiple tasks at the same time.", def2: "A system property enabling parallel operations.", expliquer: "Capacité à exécuter plusieurs tâches en même temps." },
+ { term: "Contact list", french: "liste de contacts", category: "General I.T.", syn1: "address book", syn2: "contact directory", def1: "Saved phone numbers.", def2: "A collection of stored names, numbers, and details.", expliquer: "Numéros de téléphone enregistrés." },
+ { term: "container", french: "conteneur", category: "Cloud & Virtualization", syn1: "isolated environment", syn2: "packaged runtime", def1: "A lightweight unit that packages software and dependencies.", def2: "A portable environment for running applications consistently.", expliquer: "Unité légère qui regroupe un logiciel et ses dépendances." },
+ { term: "Cooling system", french: "système de refroidissement", category: "Hardware", syn1: "cooler", syn2: "thermal management system", def1: "Prevents overheating.", def2: "A system that regulates temperature inside a computer.", expliquer: "Empêche la surchauffe." },
+ { term: "Copy", french: "copier", category: "General I.T.", syn1: "duplicate", syn2: "replicate data", def1: "Duplicate text or files.", def2: "To create an identical version of selected content.", expliquer: "Dupliquer du texte ou des fichiers." },
+ { term: "Crash", french: "plantage", category: "General I.T.", syn1: "freeze", syn2: "system failure", def1: "When software stops working.", def2: "An unexpected shutdown of a program or system.", expliquer: "Quand un logiciel cesse de fonctionner." },
+ { term: "Dashboard", french: "tableau de bord", category: "General I.T.", syn1: "control panel", syn2: "data overview screen", def1: "Screen showing key data.", def2: "A visual interface that displays important metrics.", expliquer: "Écran affichant des données clés." },
+ { term: "Data", french: "données", category: "Data & AI", syn1: "information", syn2: "digital data", def1: "Information stored or processed.", def2: "Facts or details collected for reference or analysis.", expliquer: "Informations stockées ou traitées." },
+ { term: "Data breach", french: "fuite de données", category: "Cybersecurity", syn1: "data leak", syn2: "information exposure", def1: "When private data is exposed.", def2: "An incident where sensitive information is accessed unlawfully.", expliquer: "Lorsque des données privées sont exposées." },
+ { term: "database", french: "base de données", category: "Data & AI", syn1: "data store", syn2: "information repository", def1: "An organized collection of structured information.", def2: "A system used to store, manage, and retrieve data.", expliquer: "Collection organisée d’informations structurées." },
+ { term: "Dataset", french: "ensemble de données", category: "Data & AI", syn1: "data collection", syn2: "structured dataset", def1: "Collection of data.", def2: "A group of related data points used for analysis.", expliquer: "Collection de données." },
+ { term: "debugging", french: "débogage", category: "Software Development", syn1: "error fixing", syn2: "fault removal", def1: "The process of identifying and removing errors in code.", def2: "A method used to correct software defects.", expliquer: "Processus d’identification et de suppression des erreurs dans le code." },
+ { term: "Decryption", french: "déchiffrement", category: "Cybersecurity", syn1: "data decoding", syn2: "cryptographic reversal", def1: "Turning coded data back to normal.", def2: "The process of restoring encrypted data to readable form.", expliquer: "Remettre des données chiffrées en clair." },
+ { term: "Delete", french: "supprimer", category: "General I.T.", syn1: "remove", syn2: "erase data", def1: "Remove something.", def2: "To permanently or temporarily eliminate content.", expliquer: "Supprimer quelque chose." },
+ { term: "Desktop", french: "ordinateur de bureau", category: "UI & OS", syn1: "workstation", syn2: "fixed computer", def1: "A computer that stays on a desk.", def2: "A non-portable computer designed for office or home use.", expliquer: "Ordinateur qui reste sur un bureau." },
+ { term: "Desktop (UI)", french: "bureau", category: "UI & OS", syn1: "home screen", syn2: "user workspace", def1: "Main screen of the OS.", def2: "The primary area where icons and windows appear.", expliquer: "Écran principal du système d’exploitation." },
+ { term: "Dock", french: "dock", category: "UI & OS", syn1: "station", syn2: "docking unit", def1: "Short for docking station.", def2: "A device used to connect a laptop to peripherals.", expliquer: "Abréviation de « station d’accueil »." },
+ { term: "Docking station", french: "station d’accueil", category: "UI & OS", syn1: "dock", syn2: "peripheral expansion unit", def1: "Connects a laptop to peripherals.", def2: "A device that adds ports and connections to a laptop.", expliquer: "Connecte un ordinateur portable à des périphériques." },
+ { term: "Document", french: "document", category: "General I.T.", syn1: "file", syn2: "digital document", def1: "A written digital file.", def2: "A text‑based file used to store information.", expliquer: "Un fichier numérique écrit." },
+ { term: "Domain", french: "domaine", category: "Networking", syn1: "site name", syn2: "web domain", def1: "The name of a website.", def2: "The readable address used to identify a website.", expliquer: "Le nom d’un site web." },
+ { term: "Download", french: "télécharger", category: "General I.T.", syn1: "save", syn2: "file transfer (in)", def1: "To get a file from the internet.", def2: "To transfer data from an online source to a device.", expliquer: "Télécharger un fichier depuis Internet." },
+ { term: "Edit", french: "modifier", category: "General I.T.", syn1: "change", syn2: "content modification", def1: "Change a document.", def2: "To update or adjust text or elements in a file.", expliquer: "Modifier un document." },
+ { term: "Email", french: "e‑mail", category: "General I.T.", syn1: "message", syn2: "electronic mail", def1: "Digital message.", def2: "A method of sending written communication online.", expliquer: "Message numérique." },
+ { term: "Encryption", french: "chiffrement", category: "Cybersecurity", syn1: "data coding", syn2: "cryptographic process", def1: "Protecting data by coding it.", def2: "The process of converting readable data into secure code.", expliquer: "Protéger des données en les chiffrant." },
+ { term: "environments", french: "environnements", category: "Software Development", syn1: "execution contexts", syn2: "runtime setups", def1: "Separate spaces for development, testing, and production.", def2: "Configurations used to isolate stages of software deployment.", expliquer: "Espaces séparés pour le développement, les tests et la production." },
+ { term: "Ethernet cable", french: "câble Ethernet", category: "Networking", syn1: "network cable", syn2: "LAN cable", def1: "Cable for wired internet.", def2: "A cable used to connect devices to a wired network.", expliquer: "Câble pour Internet filaire." },
+ { term: "External hard drive", french: "disque dur externe", category: "Hardware", syn1: "external HDD", syn2: "portable storage unit", def1: "Portable storage device.", def2: "A removable drive used for backups and extra storage.", expliquer: "Périphérique de stockage portable." },
+ { term: "Fan", french: "ventilateur", category: "Hardware", syn1: "cooling fan", syn2: "airflow system", def1: "Cools computer components.", def2: "A device that circulates air to prevent overheating.", expliquer: "Refroidit les composants de l’ordinateur." },
+ { term: "File", french: "fichier", category: "General I.T.", syn1: "document", syn2: "data item", def1: "A saved document or item.", def2: "A digital container that stores information.", expliquer: "Document ou élément enregistré." },
+ { term: "Firewall", french: "pare‑feu", category: "Cybersecurity", syn1: "security barrier", syn2: "network protection system", def1: "Protects a network from threats.", def2: "A system that filters incoming and outgoing network traffic.", expliquer: "Protège un réseau contre les menaces." },
+ { term: "Folder", french: "dossier", category: "General I.T.", syn1: "directory", syn2: "file container", def1: "A place to organize files.", def2: "A digital location used to group files together.", expliquer: "Endroit pour organiser des fichiers." },
+ { term: "Font", french: "police", category: "UI & OS", syn1: "typeface", syn2: "text style", def1: "Style of text.", def2: "The design of characters used in writing.", expliquer: "Style de texte." },
+ { term: "Footer", french: "pied de page", category: "UI & OS", syn1: "bottom section", syn2: "page footer", def1: "Bottom section of a page.", def2: "Content displayed at the lower part of a document.", expliquer: "Partie inférieure d’une page." },
+ { term: "Format", french: "formater", category: "UI & OS", syn1: "style", syn2: "text formatting", def1: "Change appearance of text.", def2: "To adjust layout, style, or structure of content.", expliquer: "Modifier l’apparence du texte." },
+ { term: "framework", french: "framework", category: "Software Development", syn1: "development structure", syn2: "application skeleton", def1: "A reusable platform for building software applications.", def2: "A set of tools and libraries that simplify development.", expliquer: "Plateforme réutilisable pour créer des applications logicielles." },
+ { term: "Gallery", french: "galerie", category: "General I.T.", syn1: "photo folder", syn2: "media library", def1: "Folder with photos/videos.", def2: "A section where images and videos are stored on a device.", expliquer: "Dossier contenant des photos/vidéos." },
+ { term: "GPS", french: "GPS", category: "General I.T.", syn1: "location system", syn2: "global positioning system", def1: "Location‑tracking system.", def2: "A satellite‑based system that determines geographic position.", expliquer: "Système de localisation." },
+ { term: "Graphics card", french: "carte graphique", category: "Hardware", syn1: "GPU", syn2: "graphics processor", def1: "Hardware for images and video.", def2: "A component that renders visuals and accelerates graphics tasks.", expliquer: "Matériel pour l’image et la vidéo." },
+ { term: "Hard drive", french: "disque dur", category: "Hardware", syn1: "HDD", syn2: "magnetic storage", def1: "Storage for files and data.", def2: "A device that stores digital information on spinning disks.", expliquer: "Stockage pour les fichiers et les données." },
+ { term: "HDMI cable", french: "câble HDMI", category: "Hardware", syn1: "video cable", syn2: "high-definition multimedia interface cable", def1: "Cable for video/audio output.", def2: "A cable that transmits high-quality audio and video signals.", expliquer: "Câble pour la sortie vidéo/audio." },
+ { term: "Header", french: "en‑tête", category: "UI & OS", syn1: "top section", syn2: "page header", def1: "Top section of a page.", def2: "Information placed at the upper part of a document.", expliquer: "Partie supérieure d’une page." },
+ { term: "Headphones", french: "casque audio", category: "Hardware", syn1: "headset", syn2: "audio output device", def1: "Device worn to hear sound.", def2: "A pair of speakers worn over the ears for private listening.", expliquer: "Appareil porté pour écouter du son." },
+ { term: "Headset", french: "casque micro", category: "Hardware", syn1: "headphones", syn2: "audio communication device", def1: "Headphones with a microphone.", def2: "A device combining earphones and a microphone for calls.", expliquer: "Casque avec microphone." },
+ { term: "Homepage", french: "page d’accueil", category: "General I.T.", syn1: "main page", syn2: "site landing page", def1: "The main page of a website.", def2: "The first page users see when visiting a site.", expliquer: "Page principale d’un site web." },
+ { term: "Hosting", french: "hébergement", category: "Networking", syn1: "web hosting", syn2: "site storage service", def1: "Service that stores websites.", def2: "A service that keeps website files online and accessible.", expliquer: "Service qui héberge des sites web." },
+ { term: "Hotspot", french: "point d’accès", category: "Networking", syn1: "wifi sharing", syn2: "mobile access point", def1: "Sharing mobile internet.", def2: "A feature that lets a phone provide internet to other devices.", expliquer: "Partage de la connexion Internet mobile." },
+ { term: "Input", french: "entrée", category: "General I.T.", syn1: "data entry", syn2: "system input", def1: "Information given to a system.", def2: "Data provided for processing or computation.", expliquer: "Informations fournies à un système." },
+ { term: "Installer", french: "programme d’installation", category: "General I.T.", syn1: "setup tool", syn2: "installation package", def1: "Software that installs programs.", def2: "A program that prepares and installs software files.", expliquer: "Logiciel qui installe des programmes." },
+ { term: "interface", french: "interface", category: "General I.T.", syn1: "connection point", syn2: "interaction layer", def1: "A boundary where two systems meet and interact.", def2: "A point of communication between components.", expliquer: "Interface où deux systèmes se rencontrent et interagissent." },
+ { term: "Internet", french: "internet", category: "General I.T.", syn1: "web", syn2: "global network", def1: "Global network connecting computers.", def2: "A worldwide system that links millions of devices.", expliquer: "Réseau mondial reliant des ordinateurs." },
+ { term: "IP address", french: "adresse IP", category: "Networking", syn1: "network ID", syn2: "internet protocol address", def1: "A device’s unique online number.", def2: "A numerical label that identifies a device on a network.", expliquer: "Numéro en ligne unique d’un appareil." },
+ { term: "Keyboard", french: "clavier", category: "Hardware", syn1: "keypad", syn2: "input device", def1: "The device used for typing.", def2: "A hardware device with keys used to enter text and commands.", expliquer: "Appareil utilisé pour taper." },
+ { term: "Laptop", french: "ordinateur portable", category: "General I.T.", syn1: "notebook", syn2: "portable computer", def1: "A portable computer.", def2: "A compact computer designed for mobile use.", expliquer: "Un ordinateur portable." },
+ { term: "latency", french: "latence", category: "Networking", syn1: "delay", syn2: "response time", def1: "The time it takes for data to travel from source to destination.", def2: "A measure of delay in a network or system.", expliquer: "Temps nécessaire aux données pour aller de la source à la destination." },
+ { term: "Layout", french: "mise en page", category: "UI & OS", syn1: "arrangement", syn2: "page structure", def1: "Arrangement of elements.", def2: "The organization of text, images, and spacing on a page.", expliquer: "Agencement des éléments." },
+ { term: "License", french: "licence", category: "General I.T.", syn1: "permission", syn2: "usage authorization", def1: "Permission to use software.", def2: "A legal agreement allowing access to a program.", expliquer: "Autorisation d’utiliser un logiciel." },
+ { term: "Link", french: "lien", category: "General I.T.", syn1: "hyperlink", syn2: "URL reference", def1: "A clickable connection to another page.", def2: "A digital pointer that directs users to another location online.", expliquer: "Lien cliquable vers une autre page." },
+ { term: "Login screen", french: "écran de connexion", category: "UI & OS", syn1: "sign‑in page", syn2: "authentication screen", def1: "Screen where you sign in.", def2: "The interface where users enter credentials.", expliquer: "Écran où l’on se connecte." },
+ { term: "Machine learning", french: "apprentissage automatique", category: "Data & AI", syn1: "ML", syn2: "data‑driven learning system", def1: "AI that learns from data.", def2: "A method where systems improve through experience.", expliquer: "IA qui apprend à partir des données." },
+ { term: "Malware", french: "logiciel malveillant", category: "Cybersecurity", syn1: "malicious software", syn2: "harmful program", def1: "Harmful software.", def2: "Software designed to damage or disrupt systems.", expliquer: "Logiciel malveillant." },
+ { term: "Media player", french: "lecteur multimédia", category: "General I.T.", syn1: "video player", syn2: "audio‑video playback software", def1: "Software that plays audio/video.", def2: "A program used to open and play media files.", expliquer: "Logiciel qui lit l’audio/vidéo." },
+ { term: "Meeting", french: "réunion", category: "General I.T.", syn1: "session", syn2: "scheduled discussion", def1: "Scheduled discussion.", def2: "A planned gathering to talk or collaborate.", expliquer: "Discussion planifiée." },
+ { term: "Memory card", french: "carte mémoire", category: "Hardware", syn1: "flash card", syn2: "digital storage card", def1: "Small storage card.", def2: "A compact device used to store photos, videos, or files.", expliquer: "Petite carte de stockage." },
+ { term: "Message", french: "message", category: "General I.T.", syn1: "note", syn2: "text communication", def1: "Written communication.", def2: "A piece of information sent from one person to another.", expliquer: "Communication écrite." },
+ { term: "Microphone", french: "microphone", category: "Hardware", syn1: "mic", syn2: "audio input device", def1: "Device that records sound.", def2: "A device that captures voice or other audio signals.", expliquer: "Appareil qui enregistre le son." },
+ { term: "Mobile app", french: "application mobile", category: "Mobile", syn1: "app", syn2: "mobile software", def1: "App designed for phones.", def2: "A software program created for smartphones or tablets.", expliquer: "Application conçue pour les téléphones." },
+ { term: "Mobile data", french: "données mobiles", category: "Mobile", syn1: "cellular data", syn2: "mobile internet service", def1: "Internet from a phone network.", def2: "Data connection provided by a mobile carrier.", expliquer: "Internet via un réseau mobile." },
+ { term: "Model", french: "modèle", category: "Data & AI", syn1: "AI model", syn2: "trained system", def1: "A trained AI system.", def2: "A computational structure that makes decisions or predictions.", expliquer: "Système d’IA entraîné." },
+ { term: "Modem", french: "modem", category: "Networking", syn1: "internet box", syn2: "modulator-demodulator", def1: "Connects home to the internet.", def2: "A device that converts signals to provide internet access.", expliquer: "Connecte le domicile à Internet." },
+ { term: "Monitor", french: "écran", category: "Hardware", syn1: "screen", syn2: "display unit", def1: "The screen that displays images.", def2: "A visual output device that shows text, graphics, and video.", expliquer: "Écran qui affiche des images." },
+ { term: "Motherboard", french: "carte mère", category: "Hardware", syn1: "mainboard", syn2: "system board", def1: "The main circuit board.", def2: "The central board that connects all computer components.", expliquer: "Carte de circuit principale." },
+ { term: "Mouse", french: "souris", category: "Hardware", syn1: "pointer", syn2: "pointing device", def1: "A device to move the cursor.", def2: "A handheld device used to control on-screen movement.", expliquer: "Appareil pour déplacer le curseur." },
+ { term: "Network", french: "réseau", category: "Networking", syn1: "system", syn2: "data communication network", def1: "Connected devices that share data.", def2: "A group of linked computers that exchange information.", expliquer: "Appareils connectés qui partagent des données." },
+ { term: "Neural network", french: "réseau neuronal", category: "Data & AI", syn1: "AI network", syn2: "artificial neural model", def1: "AI model inspired by the brain.", def2: "A system of connected nodes that processes information.", expliquer: "Modèle d’IA inspiré du cerveau." },
+ { term: "Notification", french: "notification", category: "UI & OS", syn1: "alert", syn2: "system message", def1: "Alert from an app.", def2: "A message that informs users of updates or events.", expliquer: "Alerte provenant d’une application." },
+ { term: "Offline", french: "hors ligne", category: "General I.T.", syn1: "disconnected", syn2: "no internet access", def1: "Not connected to the internet.", def2: "Unable to access online services or data.", expliquer: "Non connecté à Internet." },
+ { term: "Online", french: "en ligne", category: "General I.T.", syn1: "connected", syn2: "internet active", def1: "Connected to the internet.", def2: "Using or accessing services through the internet.", expliquer: "Connecté à Internet." },
+ { term: "Operating system", french: "système d’exploitation", category: "General I.T.", syn1: "OS", syn2: "system software", def1: "Main software that controls a device.", def2: "The platform that manages hardware and applications.", expliquer: "Logiciel principal qui contrôle un appareil." },
+ { term: "Output", french: "sortie", category: "General I.T.", syn1: "result", syn2: "system output", def1: "Result produced by a system.", def2: "The information a system returns after processing.", expliquer: "Résultat produit par un système." },
+ { term: "Page break", french: "saut de page", category: "UI & OS", syn1: "new page", syn2: "pagination marker", def1: "Starts a new page.", def2: "A command that forces content to continue on the next page.", expliquer: "Commence une nouvelle page." },
+ { term: "Password", french: "mot de passe", category: "Cybersecurity", syn1: "passcode", syn2: "authentication key", def1: "Secret word for access.", def2: "A confidential string used to secure an account.", expliquer: "Mot secret pour l’accès." },
+ { term: "Paste", french: "coller", category: "General I.T.", syn1: "insert", syn2: "clipboard insertion", def1: "Insert copied content.", def2: "To place copied or cut data into a new location.", expliquer: "Insérer le contenu copié." },
+ { term: "Patch", french: "correctif", category: "General I.T.", syn1: "fix", syn2: "software patch", def1: "Fix for software problems.", def2: "A small update that corrects bugs or vulnerabilities.", expliquer: "Correctif pour des problèmes logiciels." },
+ { term: "Permissions", french: "autorisations", category: "Cybersecurity", syn1: "access rights", syn2: "user privileges", def1: "Rights given to software.", def2: "Settings that control what an app or user can do.", expliquer: "Droits accordés à un logiciel." },
+ { term: "Phishing", french: "hameçonnage", category: "Cybersecurity", syn1: "scam email", syn2: "fraudulent message attack", def1: "Fake messages to steal data.", def2: "A technique used to trick users into revealing information.", expliquer: "Faux messages pour voler des données." },
+ { term: "Phone settings", french: "paramètres du téléphone", category: "Mobile", syn1: "device settings", syn2: "mobile configuration menu", def1: "Options for phone control.", def2: "The menu where users adjust phone features and preferences.", expliquer: "Options de contrôle du téléphone." },
+ { term: "Power button", french: "bouton d’alimentation", category: "Hardware", syn1: "on/off button", syn2: "power control switch", def1: "Turns a device on/off.", def2: "A button that controls the power state of a device.", expliquer: "Allume/éteint un appareil." },
+ { term: "Power cord", french: "cordon d’alimentation", category: "Hardware", syn1: "power cable", syn2: "electrical cord", def1: "Cable that brings power.", def2: "A cord that supplies electricity to a device.", expliquer: "Câble qui apporte l’alimentation." },
+ { term: "Power supply", french: "alimentation", category: "Hardware", syn1: "PSU", syn2: "power distribution unit", def1: "Provides electricity to the PC.", def2: "A component that converts and delivers power to computer parts.", expliquer: "Fournit de l’électricité au PC." },
+ { term: "Prediction", french: "prédiction", category: "Data & AI", syn1: "forecast", syn2: "predictive result", def1: "A guess based on data.", def2: "An estimated outcome generated from patterns.", expliquer: "Estimation basée sur des données." },
+ { term: "Preferences", french: "préférences", category: "UI & OS", syn1: "choices", syn2: "user configuration", def1: "Personal choices in software.", def2: "Customizable options that adapt software to the user.", expliquer: "Choix personnels dans un logiciel." },
+ { term: "Presentation", french: "présentation", category: "General I.T.", syn1: "slide deck", syn2: "visual presentation file", def1: "Slides used to show ideas.", def2: "A collection of slides used to communicate information.", expliquer: "Diapositives utilisées pour présenter des idées." },
+ { term: "Printer", french: "imprimante", category: "Hardware", syn1: "print device", syn2: "document output machine", def1: "Machine that prints documents.", def2: "A device that produces physical copies of digital files.", expliquer: "Machine qui imprime des documents." },
+ { term: "Privacy", french: "confidentialité", category: "Cybersecurity", syn1: "data protection", syn2: "information confidentiality", def1: "Protection of personal data.", def2: "The right to control how personal information is used.", expliquer: "Protection des données personnelles." },
+ { term: "Processor (CPU)", french: "processeur", category: "Hardware", syn1: "chip", syn2: "central processing unit", def1: "The computer’s main processing unit.", def2: "The component that executes instructions and performs calculations.", expliquer: "Unité principale de traitement de l’ordinateur." },
+ { term: "Program", french: "programme", category: "Hardware", syn1: "application", syn2: "software module", def1: "Another word for software.", def2: "A set of instructions executed by a computer.", expliquer: "Un autre mot pour « logiciel »." },
+ { term: "Projector", french: "projecteur", category: "Hardware", syn1: "beam device", syn2: "image projection system", def1: "Device that displays images on a wall.", def2: "A machine that projects visuals onto a screen or surface.", expliquer: "Appareil qui projette des images sur un mur." },
+ { term: "protocol", french: "protocole", category: "Networking", syn1: "communication rule", syn2: "data standard", def1: "A set of rules for data exchange between devices.", def2: "A standard that defines how systems communicate.", expliquer: "Ensemble de règles pour l’échange de données entre appareils." },
+ { term: "QR code", french: "code QR", category: "General I.T.", syn1: "scan code", syn2: "quick response code", def1: "Scannable square code.", def2: "A machine‑readable code used to access information quickly.", expliquer: "Code carré scannable." },
+ { term: "Query", french: "requête", category: "Data & AI", syn1: "request", syn2: "data retrieval command", def1: "Request for data.", def2: "A command used to extract information from a database.", expliquer: "Requête de données." },
+ { term: "RAM", french: "mémoire vive", category: "Hardware", syn1: "memory", syn2: "volatile memory", def1: "Short-term working memory.", def2: "Temporary storage used by programs while they run.", expliquer: "Mémoire de travail à court terme." },
+ { term: "Ransomware", french: "rançongiciel", category: "Cybersecurity", syn1: "lockout malware", syn2: "file‑encrypting malware", def1: "Malware that locks files for money.", def2: "A cyberattack that encrypts data and demands payment.", expliquer: "Logiciel malveillant qui verrouille des fichiers contre rançon." },
+ { term: "Reboot", french: "redémarrer", category: "General I.T.", syn1: "restart", syn2: "system reboot", def1: "Restart a device.", def2: "To shut down and start a device again.", expliquer: "Redémarrer un appareil." },
+ { term: "repository", french: "référentiel", category: "Software Development", syn1: "code storage", syn2: "version archive", def1: "A storage location for software packages or code.", def2: "A system used to manage and track project files.", expliquer: "Emplacement de stockage pour des paquets logiciels ou du code." },
+ { term: "Resolution", french: "résolution", category: "General I.T.", syn1: "image quality", syn2: "pixel density", def1: "Number of pixels on a screen.", def2: "The clarity of an image based on pixel count.", expliquer: "Nombre de pixels sur un écran." },
+ { term: "Restore", french: "restauration", category: "General I.T.", syn1: "recover", syn2: "data restoration", def1: "Returning data from a backup.", def2: "To bring back files or settings from a saved copy.", expliquer: "Restauration des données depuis une sauvegarde." },
+ { term: "Robot", french: "robot", category: "General I.T.", syn1: "machine", syn2: "automated device", def1: "Machine that performs tasks.", def2: "A programmable device that carries out actions.", expliquer: "Machine qui exécute des tâches." },
+ { term: "Router", french: "routeur", category: "Networking", syn1: "network box", syn2: "network routing device", def1: "Sends internet to devices.", def2: "A device that distributes internet connections across a network.", expliquer: "Distribue Internet aux appareils." },
+ { term: "Save", french: "enregistrer", category: "General I.T.", syn1: "store", syn2: "write to disk", def1: "Keep changes to a file.", def2: "To preserve updated information in storage.", expliquer: "Enregistrer les modifications d’un fichier." },
+ { term: "scalability", french: "scalabilité", category: "Software Development", syn1: "expandability", syn2: "growth capacity", def1: "The ability of a system to handle increased load.", def2: "A measure of how well a system grows with demand.", expliquer: "Capacité d’un système à gérer une charge accrue." },
+ { term: "Scam", french: "arnaque", category: "Cybersecurity", syn1: "fraud", syn2: "deceptive scheme", def1: "A trick to steal money or data.", def2: "A dishonest plan to deceive someone for gain.", expliquer: "Arnaque pour voler de l’argent ou des données." },
+ { term: "Scanner", french: "scanner", category: "Hardware", syn1: "digitizer", syn2: "image capture device", def1: "Device that digitizes paper.", def2: "A machine that converts physical documents into digital format.", expliquer: "Appareil qui numérise du papier." },
+ { term: "Screen lock", french: "verrouillage d’écran", category: "UI & OS", syn1: "lock screen", syn2: "device security lock", def1: "Security for the phone.", def2: "A feature that prevents unauthorized access to a device.", expliquer: "Sécurité du téléphone." },
+ { term: "Script", french: "script", category: "Software Development", syn1: "automation file", syn2: "program script", def1: "Small program that automates tasks.", def2: "A lightweight program that performs repeated actions.", expliquer: "Petit programme qui automatise des tâches." },
+ { term: "SD card", french: "carte SD", category: "Hardware", syn1: "memory card", syn2: "secure digital card", def1: "Common memory card type.", def2: "A widely used storage card for cameras and devices.", expliquer: "Type courant de carte mémoire." },
+ { term: "Search engine", french: "moteur de recherche", category: "Networking", syn1: "search tool", syn2: "information retrieval system", def1: "Tool to find information online.", def2: "A service that indexes and returns web results.", expliquer: "Outil pour trouver des informations en ligne." },
+ { term: "Secure connection", french: "connexion sécurisée", category: "Cybersecurity", syn1: "safe link", syn2: "encrypted connection", def1: "Safe, encrypted link.", def2: "A protected communication channel that prevents data interception.", expliquer: "Lien sûr et chiffré." },
+ { term: "Security update", french: "mise à jour de sécurité", category: "Cybersecurity", syn1: "security patch", syn2: "system protection update", def1: "Fixes security problems.", def2: "An update that addresses vulnerabilities and threats.", expliquer: "Corrige des problèmes de sécurité." },
+ { term: "Sensor", french: "capteur", category: "General I.T.", syn1: "detector", syn2: "measurement device", def1: "Device that detects information.", def2: "A tool that measures physical conditions like light or motion.", expliquer: "Appareil qui détecte des informations." },
+ { term: "server", french: "serveur", category: "Networking", syn1: "host machine", syn2: "backend system", def1: "A computer that provides services or resources to other computers.", def2: "A system that responds to requests over a network.", expliquer: "Ordinateur qui fournit des services ou des ressources à d’autres ordinateurs." },
+ { term: "Server", french: "serveur", category: "Networking", syn1: "host", syn2: "server machine", def1: "A computer that provides services.", def2: "A system that stores, processes, and delivers data to clients.", expliquer: "Ordinateur qui fournit des services." },
+ { term: "Settings", french: "paramètres", category: "UI & OS", syn1: "options", syn2: "configuration panel", def1: "Options you can change.", def2: "Controls that adjust how software or hardware behaves.", expliquer: "Options que vous pouvez modifier." },
+ { term: "Shortcut", french: "raccourci", category: "General I.T.", syn1: "hotkey", syn2: "quick command", def1: "Quick way to do something.", def2: "A key combination that performs an action instantly.", expliquer: "Moyen rapide de faire quelque chose." },
+ { term: "SIM card", french: "carte SIM", category: "Mobile", syn1: "SIM chip", syn2: "subscriber identity module", def1: "Chip that stores phone info.", def2: "A small card that identifies a user on a mobile network.", expliquer: "Puce qui stocke les informations du téléphone." },
+ { term: "Slide", french: "diapositive", category: "General I.T.", syn1: "page", syn2: "presentation slide", def1: "One page of a presentation.", def2: "A single screen of content within a presentation.", expliquer: "Une page (diapositive) d’une présentation." },
+ { term: "Slot", french: "emplacement", category: "General I.T.", syn1: "connector", syn2: "expansion slot", def1: "A connector for components.", def2: "A physical interface where hardware modules are inserted.", expliquer: "Connecteur pour des composants." },
+ { term: "Smartboard", french: "tableau interactif", category: "General I.T.", syn1: "interactive board", syn2: "digital whiteboard", def1: "Interactive digital board.", def2: "A touchscreen board used for teaching or presentations.", expliquer: "Tableau numérique interactif." },
+ { term: "Smartphone", french: "smartphone", category: "Mobile", syn1: "mobile phone", syn2: "smart mobile device", def1: "A mobile phone with apps.", def2: "A handheld device combining phone and computer functions.", expliquer: "Téléphone mobile avec des applications." },
+ { term: "Software", french: "logiciel", category: "General I.T.", syn1: "program", syn2: "software application", def1: "Programs that run on a device.", def2: "Digital instructions that tell a computer what to do.", expliquer: "Programmes qui s’exécutent sur un appareil." },
+ { term: "Speakers", french: "haut-parleurs", category: "Hardware", syn1: "sound system", syn2: "audio output device", def1: "Devices that play sound.", def2: "Hardware that outputs audio for music, videos, or alerts.", expliquer: "Appareils qui diffusent du son." },
+ { term: "Spreadsheet", french: "tableur", category: "General I.T.", syn1: "sheet", syn2: "data grid", def1: "Grid for numbers and data.", def2: "A digital table used for calculations and organization.", expliquer: "Grille pour les nombres et les données." },
+ { term: "Spyware", french: "logiciel espion", category: "Cybersecurity", syn1: "tracking software", syn2: "information‑stealing tool", def1: "Software that steals information.", def2: "Malware that secretly monitors user activity.", expliquer: "Logiciel qui vole des informations." },
+ { term: "SSD", french: "disque SSD", category: "Hardware", syn1: "solid-state drive", syn2: "flash storage", def1: "Fast digital storage.", def2: "A storage device that uses flash memory for quick data access.", expliquer: "Stockage numérique rapide." },
+ { term: "Storage", french: "stockage", category: "General I.T.", syn1: "memory space", syn2: "data capacity", def1: "Space for files.", def2: "The available room for saving apps, media, and documents.", expliquer: "Espace pour les fichiers." },
+ { term: "Streaming", french: "streaming", category: "General I.T.", syn1: "online viewing", syn2: "media streaming", def1: "Watching or listening online.", def2: "Playing audio or video directly from the internet.", expliquer: "Regarder ou écouter en ligne." },
+ { term: "Stylus", french: "stylet", category: "General I.T.", syn1: "digital pen", syn2: "input stylus", def1: "Pen-like tool for screens.", def2: "A precise tool used to interact with touchscreens.", expliquer: "Outil en forme de stylo pour les écrans." },
+ { term: "Tab", french: "onglet", category: "UI & OS", syn1: "browser tab", syn2: "page panel", def1: "A separate page inside a browser.", def2: "A window section that displays an open webpage.", expliquer: "Page séparée dans un navigateur." },
+ { term: "Table", french: "tableau", category: "UI & OS", syn1: "data grid", syn2: "structured dataset", def1: "Organized data structure.", def2: "A set of information arranged in rows and columns.", expliquer: "Structure de données organisée." },
+ { term: "Tablet", french: "tablette", category: "Mobile", syn1: "tab", syn2: "touchscreen device", def1: "A touchscreen device.", def2: "A portable device larger than a phone, used for apps and media.", expliquer: "Appareil à écran tactile." },
+ { term: "Template", french: "modèle", category: "UI & OS", syn1: "preset layout", syn2: "document framework", def1: "Pre‑designed layout.", def2: "A ready‑made structure used to create documents quickly.", expliquer: "Mise en page préconçue." },
+ { term: "Text message", french: "message texte", category: "General I.T.", syn1: "SMS", syn2: "short message service", def1: "Written phone message.", def2: "A brief written communication sent via mobile network.", expliquer: "Message écrit envoyé par téléphone." },
+ { term: "Threat", french: "menace", category: "General I.T.", syn1: "danger", syn2: "security risk", def1: "Possible danger to a system.", def2: "A potential action or event that could harm data or devices.", expliquer: "Danger potentiel pour un système." },
+ { term: "Toolbar", french: "barre d’outils", category: "UI & OS", syn1: "tool row", syn2: "action bar", def1: "Row of icons for actions.", def2: "A horizontal strip containing shortcuts to functions.", expliquer: "Rangée d’icônes pour les actions." },
+ { term: "Touchpad", french: "pavé tactile", category: "Hardware", syn1: "trackpad", syn2: "touch-sensitive pad", def1: "A flat cursor-control surface.", def2: "A built-in surface that detects finger movement for navigation.", expliquer: "Surface plate pour contrôler le curseur." },
+ { term: "Touchscreen", french: "écran tactile", category: "General I.T.", syn1: "touch display", syn2: "interactive screen", def1: "Screen you can touch.", def2: "A display that responds to finger or stylus input.", expliquer: "Écran que l’on peut toucher." },
+ { term: "Trackpad", french: "pavé tactile", category: "Hardware", syn1: "touchpad", syn2: "cursor control surface", def1: "Another word for touchpad.", def2: "A flat surface used to move the cursor on laptops.", expliquer: "Un autre mot pour « pavé tactile »." },
+ { term: "Training", french: "entraînement", category: "Data & AI", syn1: "learning phase", syn2: "model training process", def1: "Teaching an AI with data.", def2: "The process of improving a model using examples.", expliquer: "Entraîner une IA avec des données." },
+ { term: "Trojan", french: "cheval de Troie", category: "Cybersecurity", syn1: "malicious file", syn2: "trojan horse malware", def1: "Malware hidden inside another file.", def2: "Malicious software disguised as legitimate content.", expliquer: "Logiciel malveillant caché dans un autre fichier." },
+ { term: "Two‑factor authentication", french: "authentification à deux facteurs", category: "Cybersecurity", syn1: "2FA", syn2: "multi‑step verification", def1: "Extra security step.", def2: "A login method requiring two forms of identification.", expliquer: "Étape de sécurité supplémentaire." },
+ { term: "Uninstall", french: "désinstaller", category: "General I.T.", syn1: "remove", syn2: "software deletion", def1: "Remove software.", def2: "To delete a program from a device.", expliquer: "Désinstaller un logiciel." },
+ { term: "Update", french: "mise à jour", category: "General I.T.", syn1: "refresh", syn2: "software revision", def1: "New version of software.", def2: "An improvement or fix applied to existing software.", expliquer: "Nouvelle version d’un logiciel." },
+ { term: "Upgrade", french: "mise à niveau", category: "General I.T.", syn1: "improvement", syn2: "system enhancement", def1: "Improved version of software/hardware.", def2: "A change that increases performance or features.", expliquer: "Version améliorée d’un logiciel/matériel." },
+ { term: "Upload", french: "téléverser", category: "General I.T.", syn1: "send", syn2: "file transfer (out)", def1: "To send a file to the internet.", def2: "To transfer data from a device to an online service.", expliquer: "Envoyer un fichier sur Internet." },
+ { term: "URL", french: "URL", category: "Networking", syn1: "web address", syn2: "uniform resource locator", def1: "The address of a webpage.", def2: "A unique identifier used to access online resources.", expliquer: "Adresse d’une page web." },
+ { term: "USB hub", french: "hub USB", category: "Hardware", syn1: "port extender", syn2: "USB expansion device", def1: "Adds more USB ports.", def2: "A device that increases the number of available USB connections.", expliquer: "Ajoute des ports USB supplémentaires." },
+ { term: "USB port", french: "port USB", category: "Hardware", syn1: "connector", syn2: "universal serial bus port", def1: "A port for USB devices.", def2: "A standard interface for connecting peripherals.", expliquer: "Port pour les appareils USB." },
+ { term: "USB stick", french: "clé USB", category: "Hardware", syn1: "flash drive", syn2: "USB storage device", def1: "Portable storage device.", def2: "A small removable drive used to store and transfer files.", expliquer: "Périphérique de stockage portable." },
+ { term: "Username", french: "nom d’utilisateur", category: "General I.T.", syn1: "login name", syn2: "account identifier", def1: "Name used to sign in.", def2: "A unique identifier for accessing an account.", expliquer: "Nom utilisé pour se connecter." },
+ { term: "Vibration mode", french: "mode vibration", category: "Mobile", syn1: "silent mode", syn2: "haptic alert mode", def1: "Silent phone alerts.", def2: "A setting where notifications are felt instead of heard.", expliquer: "Alertes du téléphone en mode silencieux." },
+ { term: "Video call", french: "appel vidéo", category: "General I.T.", syn1: "video chat", syn2: "online meeting", def1: "Online face‑to‑face call.", def2: "A real‑time conversation using video over the internet.", expliquer: "Appel en face à face en ligne." },
+ { term: "virtual machine", french: "machine virtuelle", category: "Cloud & Virtualization", syn1: "emulated system", syn2: "virtualized environment", def1: "Software that simulates a physical computer.", def2: "A virtualized system running on a host machine.", expliquer: "Logiciel qui simule un ordinateur physique." },
+ { term: "Virus", french: "virus", category: "Cybersecurity", syn1: "malicious program", syn2: "infectious software", def1: "Harmful program that spreads.", def2: "Malware that replicates and damages systems.", expliquer: "Programme nuisible qui se propage." },
+ { term: "Voicemail", french: "messagerie vocale", category: "General I.T.", syn1: "voice message", syn2: "audio inbox", def1: "Recorded phone messages.", def2: "A system that stores recorded messages when calls are missed.", expliquer: "Messages téléphoniques enregistrés." },
+ { term: "Vulnerability", french: "vulnérabilité", category: "Cybersecurity", syn1: "weakness", syn2: "security flaw", def1: "Weak point in a system.", def2: "A flaw that attackers can exploit to gain access.", expliquer: "Point faible d’un système." },
+ { term: "Webcam", french: "webcam", category: "Hardware", syn1: "camera", syn2: "video capture device", def1: "Camera for video calls.", def2: "A digital camera used for online communication.", expliquer: "Caméra pour les appels vidéo." },
+ { term: "Webcam cover", french: "cache-webcam", category: "Hardware", syn1: "camera cover", syn2: "privacy shutter", def1: "A cover for camera privacy.", def2: "A small accessory that blocks the webcam when not in use.", expliquer: "Cache pour protéger la confidentialité de la caméra." },
+ { term: "Webpage", french: "page web", category: "Networking", syn1: "online page", syn2: "HTML page", def1: "A single page on a website.", def2: "A document displayed in a web browser.", expliquer: "Page unique d’un site web." },
+ { term: "Website", french: "site web", category: "Networking", syn1: "webpage collection", syn2: "online site", def1: "A collection of web pages.", def2: "A group of related pages accessible on the internet.", expliquer: "Collection de pages web." },
+ { term: "Wi‑Fi", french: "Wi‑Fi", category: "Networking", syn1: "wireless internet", syn2: "wireless network", def1: "Wireless internet connection.", def2: "A technology that allows devices to connect without cables.", expliquer: "Connexion Internet sans fil." },
+ { term: "Worm", french: "ver", category: "Cybersecurity", syn1: "self‑spreading malware", syn2: "network‑propagating program", def1: "Malware that spreads automatically.", def2: "A standalone program that replicates across networks.", expliquer: "Logiciel malveillant qui se propage automatiquement." },
+ { term: "Firewall rule", french: "", category: "Cybersecurity", syn1: "", syn2: "", def1: "", def2: "", expliquer: "" },
+ { term: "Cloud computing", french: "cloud computing", category: "Cloud & Virtualization", syn1: "cloud services", syn2: "on-demand computing", def1: "Using remote servers to run applications and store data.", def2: "A model where computing resources are delivered over the internet.", expliquer: "Utilisation de serveurs distants pour exécuter des applications et stocker des données." },
+ { term: "Data mining", french: "extraction de données", category: "Data & AI", syn1: "data extraction", syn2: "knowledge discovery", def1: "Finding patterns and useful information in large datasets.", def2: "The process of analyzing data to discover trends, correlations, and insights.", expliquer: "Analyse de grandes quantités de données pour y découvrir des tendances et des informations utiles." },
+ { term: "Deep learning", french: "apprentissage profond", category: "Data & AI", syn1: "deep neural networks", syn2: "representation learning", def1: "A machine learning method using many-layer neural networks.", def2: "A subset of AI where models learn complex patterns from large amounts of data.", expliquer: "Méthode d’IA basée sur des réseaux neuronaux à plusieurs couches pour apprendre des motifs complexes." },
+ { term: "Virtualization", french: "virtualisation", category: "Cloud & Virtualization", syn1: "hardware abstraction", syn2: "virtual environment", def1: "Creating virtual versions of computers, servers, or networks.", def2: "A technique that lets multiple systems run on the same physical hardware.", expliquer: "Technique qui permet de créer des machines ou environnements virtuels sur un même matériel." },
+ { term: "Command line", french: "ligne de commande", category: "General I.T.", syn1: "CLI", syn2: "command prompt", def1: "A text interface used to run commands on a system.", def2: "A way to control software by typing commands instead of using a graphical interface.", expliquer: "Interface texte permettant de contrôler un système en tapant des commandes." },
+ { term: "Terminal", french: "terminal", category: "General I.T.", syn1: "console", syn2: "terminal emulator", def1: "An application that provides access to the command line.", def2: "A program used to interact with the operating system via text commands.", expliquer: "Application permettant d’accéder à l’interface en ligne de commande." },
+ { term: "Shell", french: "shell", category: "General I.T.", syn1: "command interpreter", syn2: "command-line shell", def1: "Software that interprets and runs commands for the operating system.", def2: "The layer between the user and the OS that processes command input.", expliquer: "Programme qui interprète les commandes et sert d’interface entre l’utilisateur et le système." },
+ { term: "BIOS", french: "BIOS", category: "Hardware", syn1: "firmware", syn2: "boot firmware", def1: "Basic firmware that initializes hardware when a computer starts.", def2: "A low-level program that runs before the operating system to start the boot process.", expliquer: "Micrologiciel qui initialise le matériel au démarrage et lance le chargement du système." },
+ { term: "UEFI", french: "UEFI", category: "Hardware", syn1: "modern firmware", syn2: "firmware interface", def1: "A modern replacement for BIOS used to start and configure computers.", def2: "Firmware that provides boot services and hardware configuration for the OS.", expliquer: "Interface micrologicielle moderne remplaçant le BIOS pour démarrer et configurer un ordinateur." },
+ { term: "GPU acceleration", french: "accélération GPU", category: "Hardware", syn1: "GPU compute", syn2: "hardware acceleration", def1: "Using the graphics processor to speed up computations.", def2: "A technique where heavy tasks are offloaded to the GPU for faster processing.", expliquer: "Utilisation du processeur graphique pour accélérer des calculs et traitements intensifs." },
+ { term: "Heat sink", french: "dissipateur thermique", category: "Hardware", syn1: "heat spreader", syn2: "cooling block", def1: "A component that absorbs and dissipates heat from a chip.", def2: "A metal device that helps keep processors cool by transferring heat to the air.", expliquer: "Composant qui évacue la chaleur d’un processeur pour éviter la surchauffe." },
+ { term: "Power management", french: "gestion de l’alimentation", category: "Hardware", syn1: "power control", syn2: "energy management", def1: "Settings and features that control how a device uses power.", def2: "A set of mechanisms that optimize battery life and energy consumption.", expliquer: "Ensemble de réglages et mécanismes pour optimiser la consommation d’énergie et l’autonomie." },
+ { term: "Network switch", french: "commutateur réseau", category: "Networking", syn1: "network switch", syn2: "Ethernet switch", def1: "A device that connects multiple devices within a local network.", def2: "Networking hardware that forwards data to the correct destination using MAC addresses.", expliquer: "Appareil réseau reliant plusieurs équipements et acheminant les données vers le bon destinataire." },
+ { term: "Access point", french: "point d’accès", category: "Networking", syn1: "wireless access point", syn2: "AP", def1: "A device that provides Wi‑Fi connectivity to a network.", def2: "Hardware that lets wireless devices connect to a wired network.", expliquer: "Équipement qui fournit une connexion Wi‑Fi et relie les appareils sans fil au réseau." },
+ { term: "Proxy server", french: "serveur proxy", category: "Networking", syn1: "proxy", syn2: "forward proxy", def1: "An intermediary server that forwards client requests to other servers.", def2: "A server used for filtering, caching, and hiding the client’s IP address.", expliquer: "Serveur intermédiaire qui relaie les requêtes, peut filtrer et mettre en cache, et masquer l’adresse IP." },
+ { term: "Load balancer", french: "répartiteur de charge", category: "Networking", syn1: "traffic distributor", syn2: "load distribution", def1: "A system that distributes network traffic across multiple servers.", def2: "A tool that improves performance and availability by balancing requests among resources.", expliquer: "Système qui répartit les requêtes entre plusieurs serveurs pour améliorer performance et disponibilité." },
+ { term: "Cloud instance", french: "instance cloud", category: "Cloud & Virtualization", syn1: "virtual server", syn2: "compute instance", def1: "A virtual machine running in a cloud environment.", def2: "A provisioned compute resource (VM) you can start, stop, and resize in the cloud.", expliquer: "Machine virtuelle fournie dans le cloud, que l’on peut démarrer, arrêter et dimensionner." },
+ { term: "Container registry", french: "registre de conteneurs", category: "Cloud & Virtualization", syn1: "image registry", syn2: "container image repository", def1: "A storage service for container images (e.g., Docker images).", def2: "A repository used to publish, version, and pull container images for deployment.", expliquer: "Service de stockage pour images de conteneurs, utilisé pour publier et récupérer des images." },
+ { term: "Version control", french: "gestion de versions", category: "Software Development", syn1: "source control", syn2: "revision control", def1: "Tracking changes to code and files over time.", def2: "A system that records modifications so you can review history and collaborate safely.", expliquer: "Système qui enregistre les changements de fichiers/code pour suivre l’historique et faciliter la collaboration." },
+ { term: "Git", french: "Git", category: "Software Development", syn1: "version control tool", syn2: "distributed VCS", def1: "A distributed version control system for tracking source code changes.", def2: "A tool that lets teams collaborate using branches, commits, and merges.", expliquer: "Système de gestion de versions distribué permettant de suivre les changements et de collaborer." },
+ { term: "Branch (Git)", french: "branche (Git)", category: "Software Development", syn1: "branch", syn2: "feature branch", def1: "A separate line of development in a Git repository.", def2: "A pointer to a series of commits used to develop features without affecting main code.", expliquer: "Une branche est une ligne de développement séparée pour travailler sans impacter la version principale." },
+ { term: "Merge (Git)", french: "fusion (Git)", category: "Software Development", syn1: "merge", syn2: "branch merge", def1: "Combining changes from one Git branch into another.", def2: "An operation that integrates commit histories to bring feature work into the target branch.", expliquer: "Opération qui intègre les modifications d’une branche dans une autre." },
+ { term: "Pull request", french: "demande de fusion", category: "Software Development", syn1: "PR", syn2: "merge request", def1: "A request to merge code changes into a shared branch.", def2: "A review workflow where others validate changes before they are merged.", expliquer: "Demande visant à intégrer des changements de code après revue et validation." },
+ { term: "Commit", french: "commit", category: "Software Development", syn1: "revision", syn2: "snapshot", def1: "A saved set of changes recorded in version control.", def2: "A snapshot of the project at a point in time with a message describing the change.", expliquer: "Enregistrement d’un ensemble de modifications dans l’historique, avec un message descriptif." },
+ { term: "Encryption key", french: "clé de chiffrement", category: "Cybersecurity", syn1: "crypto key", syn2: "encryption secret", def1: "A value used by an algorithm to encrypt or decrypt data.", def2: "A secret key or key pair component that protects information by controlling access to encryption.", expliquer: "Valeur secrète utilisée pour chiffrer/déchiffrer des données et protéger l’accès à l’information." },
+ { term: "Data center", french: "centre de données", category: "Cloud & Virtualization", syn1: "data centre", syn2: "server farm", def1: "A facility that houses servers, storage, and networking equipment.", def2: "A secure building where computing resources are hosted with power, cooling, and connectivity.", expliquer: "Site sécurisé hébergeant des serveurs et équipements réseau, avec alimentation, refroidissement et connectivité." },
+ { term: "SaaS", french: "SaaS", category: "Cloud & Virtualization", syn1: "software as a service", syn2: "hosted software", def1: "Software delivered over the internet and accessed via a subscription.", def2: "A cloud model where the provider hosts the application and users access it online.", expliquer: "Modèle cloud où une application est hébergée par le fournisseur et utilisée via internet (abonnement)." },
+ { term: "PaaS", french: "PaaS", category: "Cloud & Virtualization", syn1: "platform as a service", syn2: "cloud platform", def1: "A cloud platform for building and deploying applications without managing servers.", def2: "A model providing runtime, databases, and tools so developers can focus on code.", expliquer: "Modèle cloud fournissant une plateforme (runtime, services) pour développer et déployer sans gérer l’infrastructure." },
+ { term: "IaaS", french: "IaaS", category: "Cloud & Virtualization", syn1: "infrastructure as a service", syn2: "cloud infrastructure", def1: "Virtualized computing resources such as servers, storage, and networks delivered online.", def2: "A cloud model where you rent infrastructure and manage the OS and applications yourself.", expliquer: "Modèle cloud où l’on loue l’infrastructure (serveurs, stockage, réseau) et l’on gère le système et les applications." }
+];
+  </script>
+
+  <script>
+  // =========================================================
+  // QUIZ ENGINE (CONFIG-DRIVEN)
+  // Uses: QUIZ_CONFIG (roles+text+settings), LABEL_CONFIG (per label UI), DATA (dataset)
+  // =========================================================
+
+  function shuffle(arr){
+    const a = arr.slice();
+    for(let i=a.length-1;i>0;i--){
+      const j = Math.floor(Math.random()*(i+1));
+      [a[i],a[j]]=[a[j],a[i]];
+    }
+    return a;
+  }
+
+  function getFieldsByRole(role){
+    try{
+      return Object.keys(QUIZ_CONFIG.fields||{}).filter(k => (QUIZ_CONFIG.fields[k].roles||[]).includes(role));
+    }catch(e){
+      return [];
+    }
+  }
+
+  function safeText(t){
+    return (t===null||t===undefined) ? "" : String(t);
+  }
+
+  // =========================================================
+  // Dynamic placeholder support (template contract)
+  // Any {{fieldName}} from the current DATA row must resolve in feedback text, etc.
+  // =========================================================
+  function toSafeKey(k){
+    return safeText(k)
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g,'_')
+      .replace(/[^a-z0-9_]/g,'_')
+      .replace(/_+/g,'_')
+      .replace(/^_+|_+$/g,'');
+  }
+
+  function applyTemplate(t, ctx){
+    var s = safeText(t);
+    if(!s || s.indexOf('{{') === -1) return s;
+    ctx = ctx || {};
+    return s.replace(/\{\{\s*([^}]+?)\s*\}\}/g, function(_, key){
+      key = safeText(key).trim();
+      if(!key) return '';
+      if(Object.prototype.hasOwnProperty.call(ctx, key)) return safeText(ctx[key]);
+      var sk = toSafeKey(key);
+      if(sk && Object.prototype.hasOwnProperty.call(ctx, sk)) return safeText(ctx[sk]);
+      var lk = key.toLowerCase();
+      if(Object.prototype.hasOwnProperty.call(ctx, lk)) return safeText(ctx[lk]);
+      return '';
+    });
+  }
+
+  // Expose for generator-injected wrappers (if any) and for internal use
+  window.applyTemplate = window.applyTemplate || applyTemplate;
+  window.__QUIZ_CTX = window.__QUIZ_CTX || {};
+
+
+  // DOM refs
+  const progressFillEl = document.getElementById("progressFill");
+  const questionIndexEl = document.getElementById("questionIndex");
+  const questionTypeEl = document.getElementById("questionType");
+  const promptLabelEl = document.getElementById("promptLabel");
+  const promptTextEl = document.getElementById("promptText");
+  const promptHelperEl = document.getElementById("promptHelper");
+  const optionsContainer = document.getElementById("optionsContainer");
+  const feedbackEl = document.getElementById("feedback");
+  const prevBtn = document.getElementById("prevBtn");
+  const nextBtn = document.getElementById("nextBtn");
+  const restartBtn = document.getElementById("restartBtn");
+  const progressTextEl = document.getElementById("progressText");
+  const scorePillEl = document.getElementById("scorePill");
+  const recapEl = document.getElementById("recap");
+  const recapListEl = document.getElementById("recapList");
+  const pillTextEl = document.getElementById("pillText");
+
+  var questionOrder = [];
+  var currentIndex = 0;
+  var score = 0;
+  var answeredCount = 0;
+  var history = [];
+  var totalQuestions = 0;
+
+  function pickPromptField(entry, promptFields, answerField){
+    const candidates = shuffle(promptFields);
+    for(const f of candidates){
+      if(f === answerField) continue;
+      const v = safeText(entry[f]).trim();
+      const ans = safeText(entry[answerField]).trim();
+      if(v && v.toLowerCase() !== ans.toLowerCase()) return f;
+    }
+    return promptFields.find(f => safeText(entry[f]).trim()) || answerField;
+  }
+
+  function buildOptions(correct, allAnswers, numOptions){
+    const wrongPool = shuffle(allAnswers.filter(a => a && a.toLowerCase() !== correct.toLowerCase()));
+    const wrong = wrongPool.slice(0, Math.max(0, numOptions - 1));
+    return shuffle([correct, ...wrong]);
+  }
+
+  function renderRecap(answerField){
+    recapListEl.innerHTML = "";
+    if(answeredCount === 0){
+      recapEl.style.display = "none";
+      return;
+    }
+    recapEl.style.display = "block";
+
+    history.forEach((h, idx) => {
+      if(!h) return;
+      const div = document.createElement("div");
+      div.className = "recap-item";
+      div.innerHTML = `
+        <div class="q-label">Q${idx+1} – ${h.uiLabel}</div>
+        <div class="prompt">${h.promptValue}</div>
+        <div class="answer-line">
+          <span class="${h.isCorrect ? "tag-correct" : "tag-incorrect"}">
+            Your answer: ${h.chosen ?? "—"}
+          </span>
+          <span class="tag-neutral">Correct: ${h.correct}</span>
+        </div>
+      `;
+      recapListEl.appendChild(div);
+    });
+  }
+
+  function updateProgress(){
+    progressTextEl.textContent = `Answered ${answeredCount} / ${totalQuestions}`;
+    scorePillEl.textContent = `Score: ${score} / ${totalQuestions}`;
+    const denom = Math.max(1, totalQuestions - 1);
+    const pct = (currentIndex / denom) * 100;
+    progressFillEl.style.width = `${Math.max(0, Math.min(100, pct))}%`;
+  }
+
+  function updateNavButtons(){
+    prevBtn.disabled = currentIndex === 0;
+    nextBtn.disabled = currentIndex >= totalQuestions - 1;
+  }
+
+  function setFeedback(text, kind){
+    try{
+      if(typeof window.applyTemplate === "function"){
+        text = window.applyTemplate(text, window.__QUIZ_CTX || {});
+      }
+    }catch(e){}
+    feedbackEl.textContent = text;
+    feedbackEl.className = "feedback" + (kind ? " " + kind : "");
+  }
+
+  function loadQuestion(answerField, promptFields, numOptions, texts){
+    const entryIndex = questionOrder[currentIndex];
+    const entry = DATA[entryIndex];
+
+    const promptField = pickPromptField(entry, promptFields, answerField);
+    const promptValue = safeText(entry[promptField]);
+    let promptValueDisplay = promptValue;
+    const correct = safeText(entry[answerField]); safeText(entry[answerField]);
+
+    // label mapping from field -> labelKey -> LABEL_CONFIG
+    const fieldDef = (QUIZ_CONFIG.fields||{})[promptField] || {};
+    const labelKey = fieldDef.label || promptField;
+    const labelCfg = (LABEL_CONFIG||{})[labelKey] || { uiLabel: labelKey, uiQuestion: (texts.prompt_helper||"") };
+
+    const uiLabel = labelCfg.uiLabel || labelKey;
+    const uiQuestion = labelCfg.uiQuestion || texts.prompt_helper || "";
+
+    
+    // Build template context for dynamic placeholders
+    try{
+      var maskAnswer = !!labelCfg.maskAnswer;
+      if(maskAnswer && typeof maskAnswerInText === 'function'){
+        promptValueDisplay = maskAnswerInText(promptValueDisplay, correct);
+      }
+      window.__QUIZ_CTX = Object.assign({}, entry, {
+        answer: correct,
+        prompt: promptValueDisplay,
+        promptText: promptValueDisplay,
+        promptHelper: uiQuestion,
+        uiLabel: uiLabel,
+        uiQuestion: uiQuestion,
+        maskAnswer: maskAnswer,
+        questionIndex: (currentIndex + 1) + ' / ' + totalQuestions,
+        score: score,
+        total: totalQuestions,
+        answerField: answerField,
+        promptField: promptField,
+        labelKey: labelKey
+      });
+    }catch(e){}
+// header
+    questionIndexEl.textContent = `Question ${currentIndex + 1} / ${totalQuestions}`;
+    questionTypeEl.textContent = uiLabel;
+    // prompt label element is optional (hidden by default)
+    if(promptLabelEl) promptLabelEl.textContent = uiLabel;
+
+    promptHelperEl.textContent = uiQuestion;
+    promptTextEl.textContent = (typeof promptValueDisplay !== "undefined" ? promptValueDisplay : promptValue);
+
+    // options
+    const allAnswers = DATA.map(r => safeText(r[answerField])).filter(Boolean);
+    const options = buildOptions(correct, allAnswers, numOptions);
+
+    optionsContainer.innerHTML = "";
+    optionsContainer.className = 'options layout-1';
+    setFeedback("", "");
+
+    options.forEach(opt => {
+      const btn = document.createElement("button");
+      btn.className = "option-btn";
+      btn.innerHTML = `<span class="label">${opt}</span>`;
+      btn.addEventListener("click", () => handleClick(opt, correct, uiLabel, promptValue, options));
+      optionsContainer.appendChild(btn);
+    });
+
+    // restore previous answer (if navigating)
+    const dataIndex = questionOrder[currentIndex];
+  if (history[dataIndex]) { restorePreviousAnswer(history[dataIndex], correct); }
+
+    updateNavButtons();
+    updateProgress();
+  }
+
+  function restorePreviousAnswer(h, correct){
+    try{ if(h && h.ctx) window.__QUIZ_CTX = h.ctx; }catch(e){}
+    const buttons = [...document.querySelectorAll(".option-btn")];
+    buttons.forEach(b => b.classList.remove("selected","correct","incorrect"));
+
+    const chosen = h.chosen;
+    const chosenBtn = buttons.find(b => b.textContent.trim() === chosen);
+    if(chosenBtn){
+      chosenBtn.classList.add("selected");
+      if(h.isCorrect){
+        chosenBtn.classList.add("correct");
+        setFeedback(QUIZ_CONFIG.text?.correct || "Correct!", "correct");
+      } else {
+        chosenBtn.classList.add("incorrect");
+        const msg = (QUIZ_CONFIG.text?.incorrect || "Incorrect. The correct answer is {{answer}}.")
+          ;
+        setFeedback(msg, "incorrect");
+        const correctBtn = buttons.find(b => b.textContent.trim() === correct);
+        if(correctBtn) correctBtn.classList.add("correct");
+      }
+    }
+  }
+
+  function handleClick(choice, correct, uiLabel, promptValue, options){
+    const dataIndex = questionOrder[currentIndex];
+  if (history[dataIndex] && typeof history[dataIndex].isCorrect === "boolean") return;
+
+    const isCorrect = choice === correct;
+    const buttons = [...document.querySelectorAll(".option-btn")];
+    buttons.forEach(b => b.classList.remove("selected","correct","incorrect"));
+
+    const chosenBtn = buttons.find(b => b.textContent.trim() === choice);
+    if(chosenBtn) chosenBtn.classList.add("selected");
+
+    if(isCorrect){
+      if(chosenBtn) chosenBtn.classList.add("correct");
+      score += 1;
+      setFeedback(QUIZ_CONFIG.text?.correct || "Correct!", "correct");
+    } else {
+      if(chosenBtn) chosenBtn.classList.add("incorrect");
+      const msg = (QUIZ_CONFIG.text?.incorrect || "Incorrect. The correct answer is {{answer}}.")
+        ;
+      setFeedback(msg, "incorrect");
+      const correctBtn = buttons.find(b => b.textContent.trim() === correct);
+      if(correctBtn) correctBtn.classList.add("correct");
+    }
+
+    answeredCount += 1;
+    history[dataIndex] = {
+      uiLabel,
+      promptValue: (typeof promptValueDisplay !== 'undefined' ? promptValueDisplay : promptValue),
+      correct,
+      chosen: choice,
+      isCorrect,
+      options,
+      ctx: (function(){
+        try{ return Object.assign({}, window.__QUIZ_CTX || {}, { chosen: choice, isCorrect: isCorrect, score: score, total: totalQuestions }); }catch(e){ return null; }
+      })()
+    };
+    updateProgress();
+  }
+
+  function startQuiz(){
+    const answerFields = getFieldsByRole("answer");
+    const promptFields = getFieldsByRole("prompt");
+
+    const answerField = answerFields[0] || "term";
+    const numOptions = (QUIZ_CONFIG.settings && QUIZ_CONFIG.settings.num_options) ? QUIZ_CONFIG.settings.num_options : 4;
+    const maxQuestions = (QUIZ_CONFIG.settings && QUIZ_CONFIG.settings.num_questions) ? QUIZ_CONFIG.settings.num_questions : DATA.length;
+
+    totalQuestions = Math.max(0, Math.min(maxQuestions, DATA.length));
+
+    // update pill
+    if(pillTextEl){
+      pillTextEl.textContent = `${totalQuestions} Questions · Multiple Choice`;
+    }
+
+    if(!Array.isArray(DATA) || DATA.length === 0 || totalQuestions === 0){
+      // graceful empty state
+      questionIndexEl.textContent = "No questions available";
+      questionTypeEl.textContent = "";
+      promptTextEl.textContent = "";
+      promptHelperEl.textContent = "Please inject a dataset into this quiz HTML.";
+      optionsContainer.innerHTML = "";
+    optionsContainer.className = 'options layout-1';
+      recapEl.style.display = "none";
+      progressFillEl.style.width = "0%";
+      progressTextEl.textContent = "Answered 0 / 0";
+      scorePillEl.textContent = "Score: 0 / 0";
+      prevBtn.disabled = true;
+      nextBtn.disabled = true;
+      return;
+    }
+
+    const indices = DATA.map((_, i) => i);
+    questionOrder = shuffle(indices).slice(0, totalQuestions);
+
+    currentIndex = 0;
+    score = 0;
+    answeredCount = 0;
+    history = [];
+    recapEl.style.display = "none";
+    progressFillEl.style.width = "0%";
+
+    const texts = QUIZ_CONFIG.text || {};
+
+    // navigation
+    prevBtn.onclick = () => {
+      if(currentIndex > 0){
+        currentIndex -= 1;
+        loadQuestion(answerField, promptFields, numOptions, texts);
+      }
+    };
+    nextBtn.onclick = () => {
+      if(currentIndex < totalQuestions - 1){
+        currentIndex += 1;
+        loadQuestion(answerField, promptFields, numOptions, texts);
+      }
+    };
+    restartBtn.onclick = () => { history = {}; answeredCount = 0; score = 0; quizCompleted = false; startQuiz(); };
+
+    loadQuestion(answerField, promptFields, numOptions, texts);
+  }
+
+  // End-of-quiz recap renderer (end only)
+function renderFinalRecap(){
+  recapListEl.innerHTML = "";
+  if(answeredCount < totalQuestions){
+    recapEl.style.display = "none";
+    return;
+  }
+  recapEl.style.display = "block";
+  history.forEach((h, idx) => {
+    if(!h) return;
+    const div = document.createElement("div");
+    div.className = "recap-item";
+    div.innerHTML = `
+      <div class="q-label">Q${idx + 1} – ${h.uiLabel}</div>
+      <div class="prompt">${h.promptValue}</div>
+      <div class="answer-line">
+        <span class="${h.isCorrect ? "tag-correct" : "tag-incorrect"}">
+          Your answer: ${h.chosen ?? "—"}
+        </span>
+        <span class="tag-neutral">Correct: ${h.correct}</span>
+      </div>
+    `;
+    recapListEl.appendChild(div);
+  });
+}
+
+// Start
+
+  startQuiz();
+  </script>
+
+<!-- RECAP_PATCH: Always-visible recap that does NOT change the core engine or constants block. -->
+<script>
+(function(){
+  try{
+    // Grab DOM
+    var recapEl = document.getElementById('recap');
+    var recapListEl = document.getElementById('recapList');
+    if(!recapEl || !recapListEl) return;
+
+    // Always show recap container (user requested)
+    recapEl.style.display = 'block';
+
+    // Helpers
+    function safeText(t){ return (t===null || t===undefined) ? '' : String(t); }
+
+    function applyTpl(t, ctx){
+      try{
+        if(typeof window.applyTemplate === 'function') return window.applyTemplate(t, ctx || {});
+      }catch(e){}
+      return safeText(t);
+    }
+
+    function getHistoryItems(){
+      // Robust: supports history keyed by quiz index OR by DATA index (dataIndex)
+      var history = window.history; // may be shadowed; fallback below
+      // In this template, history is a var in global scope, not window.history (browser history). So use eval-safe access.
+      // We'll try to read from global var via window.__quiz_history__ indirection set below.
+      var h = window.__quiz_history__;
+      var order = window.__quiz_questionOrder__;
+
+      var items = [];
+      var seen = {};
+
+      if(Array.isArray(order) && order.length){
+        for(var qi=0; qi<order.length; qi++){
+          var dataIndex = order[qi];
+          var entry = null;
+          if(h && (typeof dataIndex !== 'undefined') && h[dataIndex]) entry = h[dataIndex];
+          if(!entry && h && h[qi]) entry = h[qi];
+          if(entry){
+            items.push({q: qi+1, h: entry});
+            seen[dataIndex] = true;
+            seen[qi] = true;
+          }
+        }
+      }
+
+      // Fallback: include any remaining history entries
+      if(h){
+        if(Array.isArray(h)){
+          for(var i=0;i<h.length;i++){
+            if(seen[i]) continue;
+            if(h[i]) items.push({q: items.length+1, h: h[i]});
+          }
+        } else if(typeof h === 'object'){
+          for(var k in h){
+            if(!Object.prototype.hasOwnProperty.call(h,k)) continue;
+            if(seen[k]) continue;
+            if(h[k]) items.push({q: items.length+1, h: h[k]});
+          }
+        }
+      }
+
+      return items;
+    }
+
+    function renderRecapPatched(){
+      recapListEl.innerHTML = '';
+      var items = getHistoryItems();
+      if(!items.length){
+        var d0 = document.createElement('div');
+        d0.className = 'recap-item';
+        d0.innerHTML = '<div class="q-label">No answers yet</div><div class="prompt">Answer questions to populate the recap.</div>';
+        recapListEl.appendChild(d0);
+        return;
+      }
+
+      for(var i=0;i<items.length;i++){
+        var qnum = items[i].q;
+        var h = items[i].h || {};
+        var div = document.createElement('div');
+        div.className = 'recap-item';
+
+        var ctx = h.ctx || window.__QUIZ_CTX || {};
+        var promptDisp = applyTpl(h.promptValue, ctx);
+        var chosenDisp = applyTpl((h.chosen==null ? '—' : h.chosen), ctx);
+        var correctDisp = applyTpl((h.correct==null ? '' : h.correct), ctx);
+
+        var row = '';
+        row += '<div class="q-label">Q' + qnum + ' – ' + safeText(h.uiLabel) + '</div>';
+        row += '<div class="prompt">' + promptDisp + '</div>';
+        row += '<div class="answer-line">';
+        row += '<span class="' + (h.isCorrect ? 'tag-correct' : 'tag-incorrect') + '">Your answer: ' + chosenDisp + '</span>';
+        row += '<span class="tag-neutral">Correct: ' + correctDisp + '</span>';
+        row += '</div>';
+        div.innerHTML = row;
+        recapListEl.appendChild(div);
+      }
+    }
+
+    // ---- Hook into the engine without modifying it ----
+    // The engine uses global vars (questionOrder/history) but declared with var, so not on window.
+    // We expose them by wrapping startQuiz/loadQuestion/handleClick when they exist.
+
+    function attachHooks(){
+      try{
+        if(typeof window.startQuiz === 'function' && !window.__recapPatchedStart){
+          var origStart = window.startQuiz;
+          window.startQuiz = function(){
+            var r = origStart.apply(this, arguments);
+            // try to read globals via eval in this scope
+            try{ window.__quiz_history__ = history; }catch(e){}
+            try{ window.__quiz_questionOrder__ = questionOrder; }catch(e){}
+            renderRecapPatched();
+            return r;
+          };
+          window.__recapPatchedStart = true;
+        }
+
+        if(typeof window.loadQuestion === 'function' && !window.__recapPatchedLoad){
+          var origLoad = window.loadQuestion;
+          window.loadQuestion = function(){
+            var r = origLoad.apply(this, arguments);
+            try{ window.__quiz_history__ = history; }catch(e){}
+            try{ window.__quiz_questionOrder__ = questionOrder; }catch(e){}
+            renderRecapPatched();
+            return r;
+          };
+          window.__recapPatchedLoad = true;
+        }
+
+        if(typeof window.handleClick === 'function' && !window.__recapPatchedClick){
+          var origClick = window.handleClick;
+          window.handleClick = function(){
+            var r = origClick.apply(this, arguments);
+            try{ window.__quiz_history__ = history; }catch(e){}
+            try{ window.__quiz_questionOrder__ = questionOrder; }catch(e){}
+            renderRecapPatched();
+            return r;
+          };
+          window.__recapPatchedClick = true;
+        }
+      }catch(e){}
+    }
+
+    // Attach now and also shortly after in case scripts load later
+    attachHooks();
+    setTimeout(attachHooks, 0);
+    setTimeout(attachHooks, 50);
+
+    // Initial render
+    renderRecapPatched();
+  }catch(e){}
+})();
+</script>
+
+
+<!-- RECAP_PATCH_V5 (clears on restart/menu, reuses saved options for wrong-answer restore) -->
+<script>
+(function(){
+  function safeText(t){ return (t===null || t===undefined) ? '' : String(t); }
+  function nl(s){ return safeText(s).replace(/\\n/g,'\n'); }
+  function applyTpl(t, ctx){
+    try{ if(typeof window.applyTemplate === 'function') return window.applyTemplate(t, ctx||{}); }catch(e){}
+    return safeText(t);
+  }
+
+  function clearRecapUI(){
+    try{ var recapListEl = document.getElementById('recapList'); if(recapListEl) recapListEl.innerHTML = ''; }catch(e){}
+  }
+
+  function sync(){
+    try{ window.__quiz_history__ = history; }catch(e){}
+    try{ window.__quiz_questionOrder__ = questionOrder; }catch(e){}
+  }
+
+  function renderRecap(){
+    var recapEl = document.getElementById('recap');
+    var recapListEl = document.getElementById('recapList');
+    if(!recapEl || !recapListEl) return;
+    recapEl.style.display = 'block';
+    recapListEl.innerHTML = '';
+
+    var h = window.__quiz_history__;
+    var order = window.__quiz_questionOrder__;
+    var items = [];
+
+    if(Array.isArray(order) && order.length){
+      for(var qi=0; qi<order.length; qi++){
+        var di = order[qi];
+        var entry = (h && h[di]) ? h[di] : (h && h[qi] ? h[qi] : null);
+        if(entry) items.push({q: qi+1, h: entry});
+      }
+    }
+
+    if(!items.length){
+      var d0=document.createElement('div');
+      d0.className='recap-item';
+      d0.innerHTML='<div class="q-label">No answers yet</div><div class="prompt">Answer questions to populate the recap.</div>';
+      recapListEl.appendChild(d0);
+      return;
+    }
+
+    for(var i2=0;i2<items.length;i2++){
+      var qnum=items[i2].q;
+      var hh=items[i2].h||{};
+      var ctx=hh.ctx||window.__QUIZ_CTX||{};
+      var promptDisp = nl(applyTpl(hh.promptValue, ctx));
+      var chosenDisp = nl(applyTpl(hh.chosen==null?'—':hh.chosen, ctx));
+      var correctDisp = nl(applyTpl(hh.correct==null?'':hh.correct, ctx));
+
+      var div=document.createElement('div');
+      div.className='recap-item';
+      div.innerHTML = '<div class="q-label">Q'+qnum+' – '+safeText(hh.uiLabel)+'</div>'
+        + '<div class="prompt">'+promptDisp+'</div>'
+        + '<div class="answer-line">'
+        + '<span class="'+(hh.isCorrect?'tag-correct':'tag-incorrect')+'">Your answer: '+chosenDisp+'</span>'
+        + '<span class="tag-neutral">Correct: '+correctDisp+'</span>'
+        + '</div>';
+      recapListEl.appendChild(div);
+    }
+  }
+
+  function wrap(){
+    try{
+      // Patch loadQuestion to reuse previous options when revisiting
+      if(typeof window.loadQuestion === 'function' && !window.__wrapLoadOptions){
+        var _l = window.loadQuestion;
+        window.loadQuestion = function(answerField, promptFields, numOptions, texts){
+          var r = _l.apply(this, arguments);
+          try{
+            var dataIndex = questionOrder[currentIndex];
+            if(history && history[dataIndex] && Array.isArray(history[dataIndex].options) && history[dataIndex].options.length){
+              var correct = history[dataIndex].correct;
+              var uiLabel = history[dataIndex].uiLabel;
+              var promptValue = history[dataIndex].promptValue;
+              var options = history[dataIndex].options;
+              var optionsContainer = document.getElementById('optionsContainer');
+              if(optionsContainer){
+                optionsContainer.innerHTML = '';
+                options.forEach(function(opt){
+                  var btn = document.createElement('button');
+                  btn.className = 'option-btn';
+                  btn.innerHTML = '<span class="label">'+opt+'</span>';
+                  btn.addEventListener('click', function(){ window.handleClick(opt, correct, uiLabel, promptValue, options); });
+                  optionsContainer.appendChild(btn);
+                });
+              }
+            }
+          }catch(e){}
+          sync();
+          renderRecap();
+          return r;
+        };
+        window.__wrapLoadOptions = true;
+      }
+
+      if(typeof window.startQuiz === 'function' && !window.__wrapStartRecap){
+        var s=window.startQuiz;
+        window.startQuiz=function(){
+          clearRecapUI();
+          try{ window.__quiz_history__ = []; window.__quiz_questionOrder__ = []; }catch(e){}
+          var r=s.apply(this, arguments);
+          sync();
+          renderRecap();
+          return r;
+        };
+        window.__wrapStartRecap=true;
+      }
+
+      if(typeof window.handleClick === 'function' && !window.__wrapClickRecap){
+        var c=window.handleClick;
+        window.handleClick=function(){
+          var r=c.apply(this, arguments);
+          sync();
+          renderRecap();
+          return r;
+        };
+        window.__wrapClickRecap=true;
+      }
+
+      var rb = document.getElementById('restartBtn');
+      if(rb && !window.__wrapRestartClear){
+        rb.addEventListener('click', function(){
+          try{ window.__quiz_history__ = []; window.__quiz_questionOrder__ = []; }catch(e){}
+          clearRecapUI();
+        });
+        window.__wrapRestartClear = true;
+      }
+
+      sync();
+      renderRecap();
+    }catch(e){}
+  }
+
+  wrap();
+  setTimeout(wrap, 0);
+  setTimeout(wrap, 50);
+})();
+</script>
+
+<!-- MENU_OVERLAY_CONTROLLER (menu box text spacing + empty menu info) -->
+<script>
+(function(){
+  function nl(s){ return (s==null? '' : String(s)).replace(/\\n/g,'\n'); }
+  function applyTpl(t, ctx){
+    try{ if(typeof window.applyTemplate === 'function') return window.applyTemplate(t, ctx||{}); }catch(e){}
+    return (t==null? '' : String(t));
+  }
+
+  function initMenu(){
+    try{
+      var overlay = document.getElementById('menuOverlay');
+      var quizUI = document.getElementById('quizUI');
+      var startBtn = document.getElementById('startQuizBtn');
+      var menuBtn = document.getElementById('menuBtn');
+      var restartBtn = document.getElementById('restartBtn');
+      var card = document.querySelector('.quiz-card');
+
+      var menuTitle = document.getElementById('menuTitle');
+      var menuSubtitle = document.getElementById('menuSubtitle');
+      var menuInfo = document.getElementById('menuInfo');
+
+      if(!overlay || !quizUI || !startBtn) return;
+
+      function showOverlay(){
+        overlay.style.display='flex';
+        quizUI.style.display='none';
+        if(card) card.classList.add('menu-open');
+      }
+      function hideOverlay(){
+        overlay.style.display='none';
+        quizUI.style.display='block';
+        if(card) card.classList.remove('menu-open');
+      }
+
+      // Fill menu texts from QUIZ_CONFIG.text when available
+      try{
+        var t = (typeof QUIZ_CONFIG !== 'undefined' && QUIZ_CONFIG.text && QUIZ_CONFIG.text.title) ? QUIZ_CONFIG.text.title : (menuTitle ? menuTitle.textContent : '');
+        var st = (typeof QUIZ_CONFIG !== 'undefined' && QUIZ_CONFIG.text && QUIZ_CONFIG.text.subtitle) ? QUIZ_CONFIG.text.subtitle : (menuSubtitle ? menuSubtitle.textContent : '');
+        var info = (typeof QUIZ_CONFIG !== 'undefined' && QUIZ_CONFIG.text && QUIZ_CONFIG.text.menu_info) ? QUIZ_CONFIG.text.menu_info : '';
+        var startLabel = (typeof QUIZ_CONFIG !== 'undefined' && QUIZ_CONFIG.text && QUIZ_CONFIG.text.start_button) ? QUIZ_CONFIG.text.start_button : 'Start quiz';
+        var menuLabel = (typeof QUIZ_CONFIG !== 'undefined' && QUIZ_CONFIG.text && QUIZ_CONFIG.text.menu_button) ? QUIZ_CONFIG.text.menu_button : 'Back to menu';
+
+        if(menuTitle) menuTitle.textContent = nl(t);
+        if(menuSubtitle) menuSubtitle.textContent = nl(st);
+
+        var ctx = {};
+        try{
+          ctx = Object.assign({}, window.__QUIZ_CTX||{}, {
+            total: (typeof QUIZ_CONFIG !== 'undefined' && QUIZ_CONFIG.settings && QUIZ_CONFIG.settings.num_questions) ? QUIZ_CONFIG.settings.num_questions : (typeof DATA !== 'undefined' && Array.isArray(DATA) ? DATA.length : 0),
+            options: (typeof QUIZ_CONFIG !== 'undefined' && QUIZ_CONFIG.settings && QUIZ_CONFIG.settings.num_options) ? QUIZ_CONFIG.settings.num_options : 3
+          });
+        }catch(e){}
+
+        if(menuInfo){
+          var out = nl(applyTpl(info, ctx));
+          menuInfo.textContent = out;
+          var empty = !out.trim();
+          menuInfo.classList.toggle('is-empty', empty);
+          menuInfo.style.display = empty ? 'none' : 'block';
+        }
+
+        startBtn.textContent = startLabel;
+        if(menuBtn) menuBtn.textContent = menuLabel;
+      }catch(e){}
+
+      startBtn.addEventListener('click', function(){
+        try{ if(restartBtn) restartBtn.click(); }catch(e){}
+        hideOverlay();
+      });
+
+      if(menuBtn){
+        menuBtn.addEventListener('click', function(){
+          try{ if(restartBtn) restartBtn.click(); }catch(e){}
+          showOverlay();
+        });
+      }
+
+      showOverlay();
+    }catch(e){}
+  }
+
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initMenu);
+  else initMenu();
+})();
+</script>
+
+
+<script>
+(function(){
+  try {
+    if (typeof QUIZ_CONFIG === "undefined" || !QUIZ_CONFIG.text) return;
+    var t = QUIZ_CONFIG.text.title || "";
+    var st = QUIZ_CONFIG.text.subtitle || "";
+    var elTitle = document.querySelector(".title") || document.querySelector("h1");
+    if (elTitle && t) elTitle.textContent = t;
+    var elSub = document.querySelector(".subtitle");
+    if (elSub && st) elSub.textContent = st;
+  } catch(e) {}
+})();
+</script>
+
+<script>
+(function(){
+  try {
+    if (typeof DATA === "undefined" || !Array.isArray(DATA)) return;
+    var ANSWER_KEY = "term";
+    if (!ANSWER_KEY) return;
+    DATA = DATA.map(function(r){
+      if (!r || typeof r !== "object") return r;
+      if (typeof r.term === "undefined") r.term = r[ANSWER_KEY];
+      return r;
+    });
+  } catch(e) {}
+})();
+</script>
+
+<script>
+// =========================================================
+// Helper: hide answer inside prompt by replacing characters with underscores
+// =========================================================
+function maskAnswerInText(text, answer){
+  try{
+    text = (text===null || text===undefined) ? '' : String(text);
+    answer = (answer===null || answer===undefined) ? '' : String(answer);
+    var a = answer.trim();
+    if(!a) return text;
+    var esc = a.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    var re = new RegExp(esc, 'gi');
+    return text.replace(re, function(m){
+      return m.replace(/\S/g, '_');
+    });
+  }catch(e){
+    return (text===null || text===undefined) ? '' : String(text);
+  }
+}
+</script>
+</body>
+</html>
